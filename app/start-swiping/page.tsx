@@ -49,13 +49,13 @@ async function getMatches(): Promise<SwipeResult[]> {
   return response.json();
 }
 
-async function sendSwipeVerdict(sessionId: string, swipe: SwipeData): Promise<void> {
+async function sendSwipeVerdict(swipe: SwipeData): Promise<void> {
   const response = await fetch('/api/on-swipe', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ sessionId, swipeData: swipe }),
+    body: JSON.stringify({ swipeData: swipe }),
   });
   if (!response.ok) {
     throw new Error('Failed to send swipe verdict');
@@ -71,8 +71,10 @@ export default function StartSwiping() {
   const [showResults, setShowResults] = useState(false);
   const [swipeResults, setSwipeResults] = useState<SwipeResult[]>([]);
   const [swipes, setSwipes] = useState<SwipeData[]>([]);
-  const sessionId = localStorage.getItem('sessionUuid'); // Retrieve session ID from local storage
-
+  console.log('swipes:', typeof swipes, swipes);
+  if (swipes.length > 0){
+  console.log('profiles:', swipes[0].direction);
+  } 
   useEffect(() => {
     async function loadProfiles() {
       try {
@@ -80,7 +82,7 @@ export default function StartSwiping() {
         setProfiles(fetchedProfiles);
         setIsLoading(false);
       } catch (err) {
-        setError('Failed to load profiles. Please try again later.');
+        setError('Failed to load profiles. Please try again later.' + err);
         setIsLoading(false);
       }
     }
@@ -95,9 +97,8 @@ export default function StartSwiping() {
     const currentProfile = profiles[currentProfileIndex];
     const newSwipe: SwipeData = { profileUuid: currentProfile.uuid, direction };
     setSwipes(prevSwipes => [...prevSwipes, newSwipe]);
-
     try {
-      await sendSwipeVerdict(sessionId, newSwipe);
+      await sendSwipeVerdict(newSwipe);
     } catch (err) {
       console.error('Failed to send swipe verdict:', err);
       setError('Failed to send swipe verdict. Please try again.');

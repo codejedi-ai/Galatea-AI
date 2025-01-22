@@ -1,5 +1,5 @@
 {
-  "name": "my-next-app",
+  "name": "galatea-ai",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -16,22 +16,24 @@
     "@nextui-org/system": "^2.2.6",
     "@nextui-org/theme": "^2.2.11",
     "@radix-ui/react-slot": "^1.1.0",
-    "@types/googlemaps": "^3.43.3",
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.9.0",
+    "lru-cache": "^11.0.2",
     "my-next-app": "file:",
     "next": "^14.2.13",
+    "punycode.js": "^2.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-modal": "^3.16.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
-    "uuid": "^11.0.3",
-    "xlsx": "^0.18.5"
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
+    "@eslint/config-array": "^0.19.1",
+    "@eslint/object-schema": "^2.1.5",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20.17.9",
     "@types/react": "^18.3.12",
@@ -39,7 +41,9 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "14.2.13",
+    "glob": "^11.0.1",
     "postcss": "^8.4.49",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.7.2"
   }

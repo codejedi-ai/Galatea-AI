@@ -1,4 +1,3 @@
-import { ProfileSetupForm } from '@/components/ProfileSetupForm'
 import { Button } from "@/components/ui/button"
 import Image from 'next/image'
 import Link from 'next/link'
@@ -25,7 +24,6 @@ export default function ProfileSetup() {
       <main className="container mx-auto px-6 py-16">
         <h1 className="text-4xl md:text-5xl font-bold text-earth-800 mb-10 text-center">Set Up Your Profile</h1>
         <div className="max-w-2xl mx-auto">
-          <ProfileSetupForm />
         </div>
       </main>
 

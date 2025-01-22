@@ -6,15 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { setLocalStorage } from '@/utils/localStorage'
 
-type Profile = {
-  id: number;
-  name: string;
-  age: number;
-  bio: string;
-  imageUrl: string;
-}
 
 export default function Home() {
   const router = useRouter()
@@ -31,7 +23,6 @@ export default function Home() {
       }
       const data = await response.json()
       console.log(data.message) // Log the message from the backend
-      setLocalStorage('sessionUuid', data.uuid) // Store the UUID in localStorage
       router.push('/start-swiping')
     } catch (error) {
       console.error('Error initiating swipe:', error)
