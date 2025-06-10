@@ -55,13 +55,10 @@ export function Navbar() {
         <div className="hidden md:flex space-x-2 items-center">
           {currentUser ? (
             <>
-              <Link
-                href="/profile"
-                className="flex items-center space-x-2 text-gray-300 hover:text-teal-400 transition-colors p-2 rounded-md hover:bg-black/20"
-              >
+              <div className="flex items-center space-x-2 text-gray-300">
                 <User size={18} />
                 <span className="text-sm">{currentUser.displayName || currentUser.email}</span>
-              </Link>
+              </div>
               <Button
                 variant="ghost"
                 onClick={handleLogout}
@@ -117,14 +114,10 @@ export function Navbar() {
             <div className="flex flex-col space-y-2 pt-2">
               {currentUser ? (
                 <>
-                  <Link
-                    href="/profile"
-                    className="flex items-center space-x-2 text-gray-300 hover:text-teal-400 transition-colors py-2 px-2 rounded-md hover:bg-gray-800"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
+                  <div className="flex items-center space-x-2 text-gray-300 py-2">
                     <User size={18} />
                     <span className="text-sm">{currentUser.displayName || currentUser.email}</span>
-                  </Link>
+                  </div>
                   <Button
                     variant="ghost"
                     onClick={() => {

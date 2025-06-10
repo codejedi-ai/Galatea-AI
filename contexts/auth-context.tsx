@@ -23,9 +23,6 @@ interface AuthContextType {
   logout: () => Promise<void>
   loginWithGoogle: () => Promise<User>
   loginWithFacebook: () => Promise<User>
-  linkWithGoogle: () => Promise<void>
-  linkWithFacebook: () => Promise<void>
-  unlinkProvider: (providerId: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -94,44 +91,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function linkWithGoogle() {
-    if (!currentUser) throw new Error("No user logged in")
-
-    try {
-      const provider = new GoogleAuthProvider()
-      const { linkWithPopup } = await import("firebase/auth")
-      await linkWithPopup(currentUser, provider)
-    } catch (error: any) {
-      console.error("Error linking Google account:", error)
-      throw new Error(error.message || "Failed to link Google account")
-    }
-  }
-
-  async function linkWithFacebook() {
-    if (!currentUser) throw new Error("No user logged in")
-
-    try {
-      const provider = new FacebookAuthProvider()
-      const { linkWithPopup } = await import("firebase/auth")
-      await linkWithPopup(currentUser, provider)
-    } catch (error: any) {
-      console.error("Error linking Facebook account:", error)
-      throw new Error(error.message || "Failed to link Facebook account")
-    }
-  }
-
-  async function unlinkProvider(providerId: string) {
-    if (!currentUser) throw new Error("No user logged in")
-
-    try {
-      const { unlink } = await import("firebase/auth")
-      await unlink(currentUser, providerId)
-    } catch (error: any) {
-      console.error("Error unlinking provider:", error)
-      throw new Error(error.message || "Failed to unlink account")
-    }
-  }
-
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user)
@@ -149,9 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     loginWithGoogle,
     loginWithFacebook,
-    linkWithGoogle,
-    linkWithFacebook,
-    unlinkProvider,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
