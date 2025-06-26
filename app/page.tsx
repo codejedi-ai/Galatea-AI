@@ -155,23 +155,23 @@ export default function Home() {
         <section className="py-24 bg-gray-950">
           <div className="container mx-auto px-6">
             <h2 className="text-4xl font-bold text-center mb-16">
-              Meet Your <span className="text-teal-400">Confidence Coaches</span>
+              Meet Your <span className="text-teal-400">AI Friends</span>
             </h2>
 
             <div className="grid md:grid-cols-3 gap-8">
               <CompanionCard
-                image="/images/galatea-2.png"
-                name="Athena"
+                image="/images/galatea-1.png"
+                name="Mekkana"
                 description="Your intellectual conversation partner. Perfect for practicing deep discussions and building thoughtful communication skills."
               />
               <CompanionCard
-                image="/images/galatea-1.png"
+                image="/images/galatea-2.png"
                 name="Joseline"
                 description="The social butterfly who helps you master casual conversations and break the ice with confidence."
               />
               <CompanionCard
                 image="/images/galatea-3.png"
-                name="Iris"
+                name="Lana"
                 description="Your empathetic listener who helps you navigate emotions and build authentic connections."
               />
             </div>
@@ -188,7 +188,7 @@ export default function Home() {
               <div>
                 <ol className="space-y-8">
                   {[
-                    "Sign up and choose your confidence coach",
+                    "Sign up and choose your AI Friend",
                     "Practice conversations in different scenarios",
                     "Get personalized feedback and tips",
                     "Build confidence through regular practice",
@@ -205,8 +205,8 @@ export default function Home() {
               </div>
               <div className="relative h-[600px] rounded-lg overflow-hidden">
                 <Image
-                  src="/images/galatea-3.png"
-                  alt="AI Confidence Coach"
+                  src="/images/galatea-1.png"
+                  alt="AI Friend"
                   fill
                   style={{ objectFit: "cover" }}
                   className="rounded-lg"

@@ -19,7 +19,7 @@ const goddesses = [
   { name: "Demeter", bio: "Goddess of agriculture. Let's grow something beautiful together." },
   { name: "Persephone", bio: "Queen of the underworld. Dark and mysterious, with a sweet side." },
   { name: "Hecate", bio: "Goddess of magic and crossroads. Let's cast a spell together!" },
-  { name: "Iris", bio: "Goddess of the rainbow. Bringing color to your life!" },
+  { name: "Lana", bio: "Goddess of the rainbow. Bringing color to your life!" },
   { name: "Nike", bio: "Goddess of victory. Always up for a challenge!" }
 ]
 
