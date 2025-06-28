@@ -44,8 +44,8 @@ export function Navbar() {
           <Link href="/about" className="text-gray-300 hover:text-teal-400 transition-colors">
             About
           </Link>
-          <Link href="/profile-setup" className="text-gray-300 hover:text-teal-400 transition-colors">
-            Profile
+          <Link href="/swipe" className="text-gray-300 hover:text-teal-400 transition-colors">
+            Swipe
           </Link>
           <Link href="/companions" className="text-gray-300 hover:text-teal-400 transition-colors">
             Companions
@@ -62,7 +62,6 @@ export function Navbar() {
                 <User size={18} />
                 <span className="text-sm">{currentUser.displayName || currentUser.email}</span>
               </Link>
-
             </>
           ) : (
             <>
@@ -94,11 +93,11 @@ export function Navbar() {
               About
             </Link>
             <Link
-              href="/profile-setup"
+              href="/swipe"
               className="text-gray-300 hover:text-teal-400 transition-colors py-2"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Profile
+              Swipe
             </Link>
             <Link
               href="/companions"

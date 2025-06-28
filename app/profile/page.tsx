@@ -1,25 +1,19 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Navbar } from "@/components/navbar";
-import { ProtectedRoute } from "@/components/protected-route";
-import { useAuth } from "@/contexts/auth-context";
-import { updateProfile, updateEmail, updatePassword } from "firebase/auth";
-import { LogOut } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Navbar } from "@/components/navbar"
+import { ProtectedRoute } from "@/components/protected-route"
+import { useAuth } from "@/contexts/auth-context"
+import { updateProfile, updateEmail, updatePassword } from "firebase/auth"
+import { LogOut } from "lucide-react"
 import {
   CheckCircleIcon,
   UserIcon,
@@ -29,179 +23,163 @@ import {
   AlertCircleIcon,
   EyeIcon,
   EyeOffIcon,
-} from "lucide-react";
+} from "lucide-react"
 
 export default function Profile() {
-  const {
-    currentUser,
-    logout,
-    linkWithGoogle,
-    linkWithFacebook,
-    unlinkProvider,
-  } = useAuth();
-  const router = useRouter();
+  const { currentUser, logout, linkWithGoogle, linkWithFacebook, unlinkProvider } = useAuth()
+  const router = useRouter()
 
   // Profile form state
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [displayName, setDisplayName] = useState("")
+  const [email, setEmail] = useState("")
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // UI state
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLinking, setIsLinking] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "accounts"
-  >("profile");
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLinking, setIsLinking] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState("")
+  const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState<"profile" | "security" | "accounts">("profile")
 
   // Connected accounts state
-  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([])
 
   useEffect(() => {
     if (currentUser) {
-      setDisplayName(currentUser.displayName || "");
-      setEmail(currentUser.email || "");
+      setDisplayName(currentUser.displayName || "")
+      setEmail(currentUser.email || "")
 
       // Get connected providers
-      const providers = currentUser.providerData.map(
-        (provider) => provider.providerId
-      );
-      setConnectedProviders(providers);
+      const providers = currentUser.providerData.map((provider) => provider.providerId)
+      setConnectedProviders(providers)
     }
-  }, [currentUser]);
+  }, [currentUser])
 
   const showMessage = (message: string, isError = false) => {
     if (isError) {
-      setError(message);
-      setSuccessMessage("");
+      setError(message)
+      setSuccessMessage("")
     } else {
-      setSuccessMessage(message);
-      setError("");
+      setSuccessMessage(message)
+      setError("")
     }
     setTimeout(() => {
-      setError("");
-      setSuccessMessage("");
-    }, 5000);
-  };
+      setError("")
+      setSuccessMessage("")
+    }, 5000)
+  }
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser) return;
+    e.preventDefault()
+    if (!currentUser) return
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       await updateProfile(currentUser, {
         displayName: displayName,
-      });
+      })
 
       if (email !== currentUser.email) {
-        await updateEmail(currentUser, email);
+        await updateEmail(currentUser, email)
       }
 
-      showMessage("Profile updated successfully!");
+      showMessage("Profile updated successfully!")
     } catch (err: any) {
-      showMessage(err.message || "Failed to update profile", true);
+      showMessage(err.message || "Failed to update profile", true)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser) return;
+    e.preventDefault()
+    if (!currentUser) return
 
     if (newPassword !== confirmPassword) {
-      showMessage("New passwords do not match", true);
-      return;
+      showMessage("New passwords do not match", true)
+      return
     }
 
     if (newPassword.length < 6) {
-      showMessage("Password must be at least 6 characters long", true);
-      return;
+      showMessage("Password must be at least 6 characters long", true)
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await updatePassword(currentUser, newPassword);
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      showMessage("Password updated successfully!");
+      await updatePassword(currentUser, newPassword)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      showMessage("Password updated successfully!")
     } catch (err: any) {
-      showMessage(err.message || "Failed to update password", true);
+      showMessage(err.message || "Failed to update password", true)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleLinkAccount = async (provider: "google" | "facebook") => {
-    setIsLinking(provider);
+    setIsLinking(provider)
 
     try {
       if (provider === "google") {
-        await linkWithGoogle();
+        await linkWithGoogle()
       } else {
-        await linkWithFacebook();
+        await linkWithFacebook()
       }
 
       // Refresh connected providers
-      const providers =
-        currentUser?.providerData.map((p) => p.providerId) || [];
-      setConnectedProviders(providers);
+      const providers = currentUser?.providerData.map((p) => p.providerId) || []
+      setConnectedProviders(providers)
 
-      showMessage(
-        `${
-          provider.charAt(0).toUpperCase() + provider.slice(1)
-        } account linked successfully!`
-      );
+      showMessage(`${provider.charAt(0).toUpperCase() + provider.slice(1)} account linked successfully!`)
     } catch (err: any) {
-      showMessage(err.message || `Failed to link ${provider} account`, true);
+      showMessage(err.message || `Failed to link ${provider} account`, true)
     } finally {
-      setIsLinking(null);
+      setIsLinking(null)
     }
-  };
+  }
 
   const handleUnlinkAccount = async (providerId: string) => {
     if (connectedProviders.length <= 1) {
-      showMessage("Cannot unlink the last authentication method", true);
-      return;
+      showMessage("Cannot unlink the last authentication method", true)
+      return
     }
 
     try {
-      await unlinkProvider(providerId);
+      await unlinkProvider(providerId)
 
       // Refresh connected providers
-      const providers =
-        currentUser?.providerData.map((p) => p.providerId) || [];
-      setConnectedProviders(providers);
+      const providers = currentUser?.providerData.map((p) => p.providerId) || []
+      setConnectedProviders(providers)
 
-      const providerName = providerId === "google.com" ? "Google" : "Facebook";
-      showMessage(`${providerName} account unlinked successfully!`);
+      const providerName = providerId === "google.com" ? "Google" : "Facebook"
+      showMessage(`${providerName} account unlinked successfully!`)
     } catch (err: any) {
-      showMessage(err.message || "Failed to unlink account", true);
+      showMessage(err.message || "Failed to unlink account", true)
     }
-  };
+  }
 
   const handleLogout = async () => {
     try {
-      await logout();
-      router.push("/");
+      await logout()
+      router.push("/")
     } catch (err: any) {
-      showMessage(err.message || "Failed to log out", true);
+      showMessage(err.message || "Failed to log out", true)
     }
-  };
+  }
 
-  const isGoogleConnected = connectedProviders.includes("google.com");
-  const isFacebookConnected = connectedProviders.includes("facebook.com");
-  const hasPasswordProvider = connectedProviders.includes("password");
+  const isGoogleConnected = connectedProviders.includes("google.com")
+  const isFacebookConnected = connectedProviders.includes("facebook.com")
+  const hasPasswordProvider = connectedProviders.includes("password")
 
   return (
     <ProtectedRoute>
@@ -323,11 +301,44 @@ export default function Profile() {
                         />
                       </div>
 
-                      <Button
-                        type="submit"
-                        disabled={isLoading}
-                        className="bg-teal-500 text-black hover:bg-teal-400"
-                      >
+                      <div className="space-y-2 text-white">
+                        <Label htmlFor="profilePicture">Profile Picture</Label>
+                        <div className="flex items-center space-x-4">
+                          <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gray-800">
+                            {currentUser?.photoURL ? (
+                              <Image
+                                src={currentUser.photoURL || "/placeholder.svg"}
+                                alt="Profile"
+                                fill
+                                className="object-cover"
+                                sizes="(max-width: 80px) 100vw, 80px"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center bg-gray-800">
+                                <UserIcon className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <Input
+                              id="profilePicture"
+                              type="file"
+                              accept="image/*"
+                              className="bg-gray-800 border-gray-700 focus:border-teal-500 text-white"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) {
+                                  // For now, just show a message that this feature is coming soon
+                                  showMessage("Profile picture upload coming soon!", false)
+                                }
+                              }}
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Upload a new profile picture (JPG, PNG)</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button type="submit" disabled={isLoading} className="bg-teal-500 text-black hover:bg-teal-400">
                         {isLoading ? "Updating..." : "Update Profile"}
                       </Button>
                     </form>
@@ -351,38 +362,25 @@ export default function Profile() {
                   </CardHeader>
                   <CardContent>
                     {hasPasswordProvider ? (
-                      <form
-                        onSubmit={handleUpdatePassword}
-                        className="space-y-6"
-                      >
+                      <form onSubmit={handleUpdatePassword} className="space-y-6">
                         <div className="space-y-2">
-                          <Label htmlFor="currentPassword">
-                            Current Password
-                          </Label>
+                          <Label htmlFor="currentPassword">Current Password</Label>
                           <div className="relative">
                             <Input
                               id="currentPassword"
                               type={showCurrentPassword ? "text" : "password"}
                               value={currentPassword}
-                              onChange={(e) =>
-                                setCurrentPassword(e.target.value)
-                              }
+                              onChange={(e) => setCurrentPassword(e.target.value)}
                               className="bg-gray-800 border-gray-700 focus:border-teal-500 text-white pr-10"
                               placeholder="Enter current password"
                               required
                             />
                             <button
                               type="button"
-                              onClick={() =>
-                                setShowCurrentPassword(!showCurrentPassword)
-                              }
+                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                             >
-                              {showCurrentPassword ? (
-                                <EyeOffIcon size={18} />
-                              ) : (
-                                <EyeIcon size={18} />
-                              )}
+                              {showCurrentPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                             </button>
                           </div>
                         </div>
@@ -401,57 +399,37 @@ export default function Profile() {
                             />
                             <button
                               type="button"
-                              onClick={() =>
-                                setShowNewPassword(!showNewPassword)
-                              }
+                              onClick={() => setShowNewPassword(!showNewPassword)}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                             >
-                              {showNewPassword ? (
-                                <EyeOffIcon size={18} />
-                              ) : (
-                                <EyeIcon size={18} />
-                              )}
+                              {showNewPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                             </button>
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="confirmPassword">
-                            Confirm New Password
-                          </Label>
+                          <Label htmlFor="confirmPassword">Confirm New Password</Label>
                           <div className="relative">
                             <Input
                               id="confirmPassword"
                               type={showConfirmPassword ? "text" : "password"}
                               value={confirmPassword}
-                              onChange={(e) =>
-                                setConfirmPassword(e.target.value)
-                              }
+                              onChange={(e) => setConfirmPassword(e.target.value)}
                               className="bg-gray-800 border-gray-700 focus:border-teal-500 text-white pr-10"
                               placeholder="Confirm new password"
                               required
                             />
                             <button
                               type="button"
-                              onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                              }
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                             >
-                              {showConfirmPassword ? (
-                                <EyeOffIcon size={18} />
-                              ) : (
-                                <EyeIcon size={18} />
-                              )}
+                              {showConfirmPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                             </button>
                           </div>
                         </div>
 
-                        <Button
-                          type="submit"
-                          disabled={isLoading}
-                          className="bg-teal-500 text-black hover:bg-teal-400"
-                        >
+                        <Button type="submit" disabled={isLoading} className="bg-teal-500 text-black hover:bg-teal-400">
                           {isLoading ? "Updating..." : "Update Password"}
                         </Button>
                       </form>
@@ -459,9 +437,8 @@ export default function Profile() {
                       <div className="text-center py-8">
                         <KeyIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                         <p className="text-gray-400 mb-4">
-                          You're currently signed in with a social account. To
-                          enable password login, you'll need to set up a
-                          password.
+                          You're currently signed in with a social account. To enable password login, you'll need to set
+                          up a password.
                         </p>
                         <Button
                           onClick={() => setActiveTab("accounts")}
@@ -485,8 +462,7 @@ export default function Profile() {
                       Connected Accounts
                     </CardTitle>
                     <CardDescription className="text-gray-400">
-                      Link your social accounts to sign in with multiple
-                      methods.
+                      Link your social accounts to sign in with multiple methods.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -515,9 +491,7 @@ export default function Profile() {
                         </div>
                         <div>
                           <h3 className="text-white font-medium">Google</h3>
-                          <p className="text-gray-400 text-sm">
-                            {isGoogleConnected ? "Connected" : "Not connected"}
-                          </p>
+                          <p className="text-gray-400 text-sm">{isGoogleConnected ? "Connected" : "Not connected"}</p>
                         </div>
                       </div>
                       {isGoogleConnected ? (
@@ -548,21 +522,13 @@ export default function Profile() {
                     <div className="flex items-center justify-between p-4 border border-gray-700 rounded-lg">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-[#1877F2] rounded-full flex items-center justify-center">
-                          <svg
-                            className="w-6 h-6"
-                            fill="white"
-                            viewBox="0 0 24 24"
-                          >
+                          <svg className="w-6 h-6" fill="white" viewBox="0 0 24 24">
                             <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
                           </svg>
                         </div>
                         <div>
                           <h3 className="text-white font-medium">Facebook</h3>
-                          <p className="text-gray-400 text-sm">
-                            {isFacebookConnected
-                              ? "Connected"
-                              : "Not connected"}
-                          </p>
+                          <p className="text-gray-400 text-sm">{isFacebookConnected ? "Connected" : "Not connected"}</p>
                         </div>
                       </div>
                       {isFacebookConnected ? (
@@ -584,25 +550,19 @@ export default function Profile() {
                           disabled={isLinking === "facebook"}
                         >
                           <LinkIcon className="w-4 h-4 mr-2" />
-                          {isLinking === "facebook"
-                            ? "Connecting..."
-                            : "Connect"}
+                          {isLinking === "facebook" ? "Connecting..." : "Connect"}
                         </Button>
                       )}
                     </div>
 
                     {connectedProviders.length <= 1 && (
                       <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-4 py-3 rounded-md flex items-start gap-2">
-                        <AlertCircleIcon
-                          size={20}
-                          className="mt-0.5 flex-shrink-0"
-                        />
+                        <AlertCircleIcon size={20} className="mt-0.5 flex-shrink-0" />
                         <div>
                           <p className="font-medium">Security Notice</p>
                           <p className="text-sm">
-                            We recommend connecting at least two authentication
-                            methods to ensure you can always access your
-                            account.
+                            We recommend connecting at least two authentication methods to ensure you can always access
+                            your account.
                           </p>
                         </div>
                       </div>
@@ -637,5 +597,5 @@ export default function Profile() {
         <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-gray-950 to-transparent -z-10"></div>
       </div>
     </ProtectedRoute>
-  );
+  )
 }
