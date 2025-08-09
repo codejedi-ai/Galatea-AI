@@ -9,7 +9,7 @@
 5) The app injects these values at runtime using a server-rendered script so they are not bundled into client code.
 \`\`\`
 
-```tsx file="app/layout.tsx"
+\`\`\`tsx file="app/layout.tsx"
 [v0-no-op-code-block-prefix]import type { Metadata } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'

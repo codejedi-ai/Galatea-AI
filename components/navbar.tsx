@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
-import { Menu, X, LogOut, User, Settings } from 'lucide-react'
+import { Menu, X, LogOut, User, Settings } from "lucide-react"
 import { useAuth } from "@/contexts/simple-auth-context"
 
 export function Navbar() {
@@ -54,11 +54,11 @@ export function Navbar() {
               <Link href="/profile" className="text-gray-300 hover:text-teal-400 transition-colors">
                 Profile
               </Link>
+              <Link href="/start-swiping" className="text-gray-300 hover:text-teal-400 transition-colors">
+                Discover
+              </Link>
             </>
           )}
-          <Link href="/start-swiping" className="text-gray-300 hover:text-teal-400 transition-colors">
-            Discover
-          </Link>
         </div>
 
         <div className="hidden md:flex space-x-4 items-center">
@@ -68,11 +68,14 @@ export function Navbar() {
           ) : currentUser ? (
             <>
               {/* Profile Section - Clickable */}
-              <Link href="/dashboard" className="flex items-center space-x-3 text-gray-300 hover:text-teal-400 transition-colors group">
+              <Link
+                href="/dashboard"
+                className="flex items-center space-x-3 text-gray-300 hover:text-teal-400 transition-colors group"
+              >
                 {/* Profile Picture */}
                 {currentUser.user_metadata?.avatar_url ? (
                   <img
-                    src={currentUser.user_metadata.avatar_url}
+                    src={currentUser.user_metadata.avatar_url || "/placeholder.svg"}
                     alt="Profile"
                     className="w-8 h-8 rounded-full border-2 border-teal-500 group-hover:border-teal-400 transition-colors"
                   />
@@ -83,25 +86,20 @@ export function Navbar() {
                 )}
                 {/* Username */}
                 <span className="text-sm font-medium">
-                  {currentUser.user_metadata?.full_name || 
-                   currentUser.user_metadata?.name || 
-                   currentUser.user_metadata?.preferred_username ||
-                   currentUser.email?.split('@')[0]}
+                  {currentUser.user_metadata?.full_name ||
+                    currentUser.user_metadata?.name ||
+                    currentUser.user_metadata?.preferred_username ||
+                    currentUser.email?.split("@")[0]}
                 </span>
               </Link>
-              
+
               {/* Quick Action Buttons */}
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-gray-300 hover:text-teal-400 hover:bg-black/20"
-              >
+              <Button asChild variant="ghost" size="sm" className="text-gray-300 hover:text-teal-400 hover:bg-black/20">
                 <Link href="/profile">
                   <Settings size={18} />
                 </Link>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -144,15 +142,15 @@ export function Navbar() {
                 >
                   Profile
                 </Link>
+                <Link
+                  href="/start-swiping"
+                  className="text-gray-300 hover:text-teal-400 transition-colors py-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Discover
+                </Link>
               </>
             )}
-            <Link
-              href="/start-swiping"
-              className="text-gray-300 hover:text-teal-400 transition-colors py-2"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Discover
-            </Link>
             <div className="flex flex-col space-y-2 pt-2">
               {!mounted ? (
                 // Show loading state during hydration
@@ -163,7 +161,7 @@ export function Navbar() {
                     {/* Profile Picture */}
                     {currentUser.user_metadata?.avatar_url ? (
                       <img
-                        src={currentUser.user_metadata.avatar_url}
+                        src={currentUser.user_metadata.avatar_url || "/placeholder.svg"}
                         alt="Profile"
                         className="w-8 h-8 rounded-full border-2 border-teal-500"
                       />
@@ -174,10 +172,10 @@ export function Navbar() {
                     )}
                     {/* Username */}
                     <span className="text-sm font-medium">
-                      {currentUser.user_metadata?.full_name || 
-                       currentUser.user_metadata?.name || 
-                       currentUser.user_metadata?.preferred_username ||
-                       currentUser.email?.split('@')[0]}
+                      {currentUser.user_metadata?.full_name ||
+                        currentUser.user_metadata?.name ||
+                        currentUser.user_metadata?.preferred_username ||
+                        currentUser.email?.split("@")[0]}
                     </span>
                   </div>
                   <Button
