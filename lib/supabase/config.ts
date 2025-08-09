@@ -6,7 +6,6 @@ import "server-only"
  */
 export function getPublicSupabaseConfig() {
   // Prefer server-side envs. Fallbacks included if you have them set,
-  // but we avoid referencing the flagged NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY entirely.
   const url =
     process.env.SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL || // optional fallback
