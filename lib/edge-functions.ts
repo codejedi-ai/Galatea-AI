@@ -60,8 +60,29 @@ const callEdgeFunction = async (
   return await response.json()
 }
 
-// Companions
+// Edge Functions API
 export const edgeFunctions = {
+  // Initialization - Call this once on app startup for blank Supabase instances
+  async initialize() {
+    const supabaseUrl = getSupabaseUrl()
+    const token = await getAuthToken()
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/initialize`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: response.statusText }))
+      throw new Error(error.error || `Failed to initialize: ${response.statusText}`)
+    }
+
+    return await response.json()
+  },
+
   // Companions
   async getCompanions(limit = 10) {
     const result = await callEdgeFunction('get-companions', {
