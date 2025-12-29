@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export interface UserProfile {
   id: string
@@ -44,224 +44,32 @@ export interface UserStats {
 }
 
 /**
- * Ensures a user profile exists by calling the database function or creating directly
- * This handles cases where the trigger might have failed
+ * Ensures a user profile exists via Edge Function
  */
 async function ensureUserProfileExists(userId: string): Promise<void> {
-  const supabase = createClient()
-  
-  // First, try to call the database function if it exists
-  const { error: rpcError } = await supabase.rpc('ensure_user_profile_exists', {
-    p_user_id: userId
-  })
-  
-  // If RPC doesn't exist or fails, try direct insert
-  if (rpcError) {
-    console.warn('RPC function not available or failed, trying direct insert:', rpcError.message)
-    
-    // Fallback: Try to create profile directly
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.id !== userId) return
-    
-    const displayName = user.user_metadata?.full_name || 
-                       user.user_metadata?.name || 
-                       user.user_metadata?.first_name ||
-                       user.email?.split('@')[0] || 
-                       'User'
-    
-    // Try to insert profile (ON CONFLICT will handle if it already exists)
-    const { error: profileError } = await supabase.from('user_profiles').upsert({
-      id: userId,
-      display_name: displayName,
-      avatar_url: user.user_metadata?.avatar_url || null
-    }, {
-      onConflict: 'id'
-    })
-    
-    if (profileError && !profileError.message?.includes('duplicate') && !profileError.message?.includes('already exists')) {
-      console.error('Failed to create user profile:', profileError)
-    }
-    
-    // Try to insert stats
-    const { error: statsError } = await supabase.from('user_stats').upsert({
-      user_id: userId
-    }, {
-      onConflict: 'user_id'
-    })
-    
-    if (statsError && !statsError.message?.includes('duplicate') && !statsError.message?.includes('already exists')) {
-      console.error('Failed to create user stats:', statsError)
-    }
-    
-    // Try to insert preferences
-    const { error: prefsError } = await supabase.from('user_preferences').upsert({
-      user_id: userId
-    }, {
-      onConflict: 'user_id'
-    })
-    
-    if (prefsError && !prefsError.message?.includes('duplicate') && !prefsError.message?.includes('already exists')) {
-      console.error('Failed to create user preferences:', prefsError)
-    }
-  }
+  await edgeFunctions.ensureUserProfile()
 }
 
 export async function getUserProfile(): Promise<UserProfile | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  let { data, error } = await supabase.from("user_profiles").select("*").eq("id", user.id).single()
-
-  // If profile doesn't exist, try to create it
-  if (error) {
-    if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
-      // Profile doesn't exist, try to create it
-      try {
-        await ensureUserProfileExists(user.id)
-        // Retry fetching the profile
-        const retryResult = await supabase.from("user_profiles").select("*").eq("id", user.id).single()
-        if (retryResult.error) {
-          console.error("Failed to create/fetch user profile:", retryResult.error)
-          return null
-        }
-        data = retryResult.data
-      } catch (createError: any) {
-        console.error("Error ensuring user profile exists:", createError)
-        return null
-      }
-    } else {
-      throw new Error(`Failed to fetch user profile: ${error.message}`)
-    }
-  }
-
-  return data
+  return await edgeFunctions.getUserProfile()
 }
 
 export async function updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase.from("user_profiles").update(updates).eq("id", user.id).select().single()
-
-  if (error) {
-    throw new Error(`Failed to update user profile: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.updateUserProfile(updates)
 }
 
 export async function getUserPreferences(): Promise<UserPreferences | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  let { data, error } = await supabase.from("user_preferences").select("*").eq("user_id", user.id).single()
-
-  // If preferences don't exist, ensure profile exists first (which creates preferences)
-  if (error) {
-    if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
-      try {
-        await ensureUserProfileExists(user.id)
-        // Retry fetching preferences
-        const retryResult = await supabase.from("user_preferences").select("*").eq("user_id", user.id).single()
-        if (retryResult.error) {
-          console.error("Failed to create/fetch user preferences:", retryResult.error)
-          return null
-        }
-        data = retryResult.data
-      } catch (createError: any) {
-        console.error("Error ensuring user preferences exist:", createError)
-        return null
-      }
-    } else {
-      throw new Error(`Failed to fetch user preferences: ${error.message}`)
-    }
-  }
-
-  return data
+  return await edgeFunctions.getUserPreferences()
 }
 
 export async function updateUserPreferences(updates: Partial<UserPreferences>): Promise<UserPreferences> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .update(updates)
-    .eq("user_id", user.id)
-    .select()
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to update user preferences: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.updateUserPreferences(updates)
 }
 
 export async function getUserStats(): Promise<UserStats | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  let { data, error } = await supabase.from("user_stats").select("*").eq("user_id", user.id).single()
-
-  // If stats don't exist, ensure profile exists first (which creates stats)
-  if (error) {
-    if (error.code === "PGRST116" || error.message?.includes("does not exist")) {
-      try {
-        await ensureUserProfileExists(user.id)
-        // Retry fetching stats
-        const retryResult = await supabase.from("user_stats").select("*").eq("user_id", user.id).single()
-        if (retryResult.error) {
-          console.error("Failed to create/fetch user stats:", retryResult.error)
-          return null
-        }
-        data = retryResult.data
-      } catch (createError: any) {
-        console.error("Error ensuring user stats exist:", createError)
-        return null
-      }
-    } else {
-      throw new Error(`Failed to fetch user stats: ${error.message}`)
-    }
-  }
-
-  return data
+  return await edgeFunctions.getUserStats()
 }
 
 export async function updateLastActive(): Promise<void> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return
-
-  const { error } = await supabase
-    .from("user_profiles")
-    .update({ last_active_at: new Date().toISOString() })
-    .eq("id", user.id)
-
-  if (error) {
-    console.error("Failed to update last active:", error.message)
-  }
+  await edgeFunctions.updateLastActive()
 }

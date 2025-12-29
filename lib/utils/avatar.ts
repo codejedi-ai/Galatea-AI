@@ -1,11 +1,8 @@
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 
-const PROFILE_PICS_BUCKET = 'profile-pics'
-
 /**
- * Get the user's profile picture URL from the profile-pics bucket
- * Checks the user_profile_pics table for the profile_pic_key
+ * Get the user's profile picture URL via Edge Function
  * Returns null if no profile picture exists (use placeholder)
  */
 export async function getUserAvatarUrl(user: User | null | undefined, cacheBust?: boolean): Promise<string | null> {
@@ -13,42 +10,49 @@ export async function getUserAvatarUrl(user: User | null | undefined, cacheBust?
   
   try {
     const supabase = createClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     
-    // Get the profile_pic_key from user_profile_pics table
-    const { data: profilePic, error } = await supabase
-      .from('user_profile_pics')
-      .select('profile_pic_key')
-      .eq('user_id', user.id)
-      .single()
-    
-    // If table doesn't exist or no profile picture found, return null
-    if (error) {
-      // Check if it's a "table doesn't exist" error or just "no rows"
-      if (error.code === 'PGRST116' || error.code === '42P01') {
-        // No profile picture found or table doesn't exist - return null (use placeholder)
+    if (!supabaseUrl) {
+      console.error('NEXT_PUBLIC_SUPABASE_URL is not set')
+      return null
+    }
+
+    // Get auth token
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return null
+    }
+
+    // Call Edge Function
+    const url = new URL(`${supabaseUrl}/functions/v1/get-profile-picture`)
+    if (cacheBust) {
+      url.searchParams.set('cacheBust', 'true')
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
         return null
       }
-      // For other errors, log and return null
-      console.debug('Error fetching profile picture:', error.message)
+      const error = await response.json().catch(() => ({}))
+      console.debug('Error fetching profile picture:', error.error || response.statusText)
+      return null
+    }
+
+    const result = await response.json()
+    
+    if (!result.success || !result.url) {
       return null
     }
     
-    if (!profilePic?.profile_pic_key) {
-      // No profile picture found
-      return null
-    }
-    
-    // Get public URL from storage
-    const { data: { publicUrl } } = supabase.storage
-      .from(PROFILE_PICS_BUCKET)
-      .getPublicUrl(profilePic.profile_pic_key)
-    
-    if (cacheBust) {
-      const separator = publicUrl.includes('?') ? '&' : '?'
-      return `${publicUrl}${separator}t=${Date.now()}`
-    }
-    
-    return publicUrl
+    return result.url
   } catch (error: any) {
     // Catch any unexpected errors and return null gracefully
     console.debug('Error fetching profile picture:', error?.message || error)

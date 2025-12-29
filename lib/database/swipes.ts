@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export type SwipeDecision = "like" | "pass" | "super_like"
 
@@ -48,28 +49,7 @@ export async function recordSwipeDecision(companionId: string, decision: SwipeDe
 }
 
 export async function processSwipeDecision(companionId: string, decision: SwipeDecision): Promise<ProcessSwipeResult> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  // Use the database function for complete swipe processing
-  const { data, error } = await supabase.rpc("process_swipe_decision", {
-    p_user_id: user.id,
-    p_companion_id: companionId,
-    p_decision: decision,
-  })
-
-  if (error) {
-    return {
-      success: false,
-      error: error.message,
-    }
-  }
-
-  return data as ProcessSwipeResult
+  return await edgeFunctions.processSwipe(companionId, decision) as ProcessSwipeResult
 }
 
 export async function getUserSwipeDecisions(): Promise<SwipeDecisionRecord[]> {

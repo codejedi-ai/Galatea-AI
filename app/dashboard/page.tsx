@@ -26,8 +26,9 @@ export default function Dashboard() {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now()) // For cache-busting
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
-  const [bannerTimestamp, setBannerTimestamp] = useState<number>(Date.now())
+  const [bannerTimestamp, setBannerTimestamp] = useState<number>(Date.now()) // For cache-busting
   const [isUploadingBanner, setIsUploadingBanner] = useState(false)
   const [showChangeBannerDialog, setShowChangeBannerDialog] = useState(false)
   const bannerFileInputRef = useRef<HTMLInputElement>(null)
@@ -42,31 +43,50 @@ export default function Dashboard() {
     }
   }, [currentUser, loading, router, mounted])
 
+  // Query database and bucket for avatar image on load
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && mounted) {
+      // Query from database and bucket for profile picture
       getUserAvatarUrl(currentUser)
         .then(url => {
-          setAvatarUrl(url)
+          if (url && url !== "/placeholder.svg") {
+            setAvatarUrl(url)
+            setAvatarTimestamp(Date.now())
+          } else {
+            setAvatarUrl(null)
+          }
         })
         .catch(err => {
           // Silently handle errors - just show placeholder
-          console.debug('Error fetching avatar:', err)
+          console.debug('Error fetching avatar from database/bucket:', err)
           setAvatarUrl(null)
         })
+    } else if (!currentUser) {
+      setAvatarUrl(null)
+    }
+  }, [currentUser, mounted])
 
+  // Query database and bucket for banner image on load
+  useEffect(() => {
+    if (currentUser && mounted) {
+      // Query from database and bucket for banner
       getUserBannerUrl(currentUser)
         .then(url => {
-          setBannerUrl(url)
+          if (url) {
+            setBannerUrl(url)
+            setBannerTimestamp(Date.now())
+          } else {
+            setBannerUrl(null)
+          }
         })
         .catch(err => {
-          console.debug('Error fetching banner:', err)
+          console.debug('Error fetching banner from database/bucket:', err)
           setBannerUrl(null)
         })
-    } else {
-      setAvatarUrl(null)
+    } else if (!currentUser) {
       setBannerUrl(null)
     }
-  }, [currentUser])
+  }, [currentUser, mounted])
 
   const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -160,7 +180,7 @@ export default function Dashboard() {
       <Navbar />
 
       <main className="container mx-auto px-6 pt-24 pb-16">
-        {/* Banner Section */}
+        {/* Banner Section with Profile Picture Overlay */}
         <div className="relative w-full mb-8 -mx-6 px-6">
           <div
             className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden bg-gray-900 cursor-pointer group"
@@ -201,6 +221,25 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* Profile Picture Overlay - Positioned at bottom center of banner */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 z-10">
+            {avatarUrl ? (
+              <Image
+                key={`${avatarUrl}-${avatarTimestamp}`}
+                src={`${avatarUrl}?t=${avatarTimestamp}`}
+                alt="Profile"
+                width={120}
+                height={120}
+                className="w-[120px] h-[120px] rounded-full border-4 border-black object-cover"
+                unoptimized
+              />
+            ) : (
+              <div className="w-[120px] h-[120px] rounded-full bg-teal-500 flex items-center justify-center border-4 border-black">
+                <Users size={48} className="text-black" />
+              </div>
+            )}
+          </div>
+
           {/* Hidden file input for banner */}
           <input
             ref={bannerFileInputRef}
@@ -211,23 +250,8 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Welcome Section */}
-        <div className="text-center mb-12">
-          <div className="mb-6">
-            {avatarUrl ? (
-              <Image
-                src={avatarUrl}
-                alt="Profile"
-                width={96}
-                height={96}
-                className="w-24 h-24 rounded-full border-4 border-teal-500 mx-auto mb-4 object-cover"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-teal-500 flex items-center justify-center mx-auto mb-4">
-                <Users size={32} className="text-black" />
-              </div>
-            )}
-          </div>
+        {/* Welcome Section - Adjusted padding to account for profile picture overlap */}
+        <div className="text-center mb-12 pt-16">
           <h1 className="text-4xl font-bold mb-4">
             Welcome back, {" "}
             <span className="text-teal-400">

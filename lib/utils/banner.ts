@@ -1,11 +1,8 @@
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/utils/supabase/client'
 
-const PROFILE_PICS_BUCKET = 'profile-pics'
-
 /**
- * Get the user's banner URL from the profile-pics bucket
- * Checks the user_banners table for the banner_key
+ * Get the user's banner URL via Edge Function
  * Returns null if no banner exists
  */
 export async function getUserBannerUrl(user: User | null | undefined, cacheBust?: boolean): Promise<string | null> {
@@ -13,44 +10,49 @@ export async function getUserBannerUrl(user: User | null | undefined, cacheBust?
 
   try {
     const supabase = createClient()
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!supabaseUrl) {
+      console.error('NEXT_PUBLIC_SUPABASE_URL is not set')
+      return null
+    }
 
-    // Get the banner_key from user_banners table using JOIN with user_profiles
-    const { data: userProfile, error } = await supabase
-      .from('user_profiles')
-      .select('id, user_banners(banner_key)')
-      .eq('id', user.id)
-      .single()
+    // Get auth token
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      return null
+    }
 
-    // If table doesn't exist or no profile found, return null
-    if (error) {
-      if (error.code === 'PGRST116' || error.code === '42P01') {
+    // Call Edge Function
+    const url = new URL(`${supabaseUrl}/functions/v1/get-banner`)
+    if (cacheBust) {
+      url.searchParams.set('cacheBust', 'true')
+    }
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      if (response.status === 401) {
         return null
       }
-      console.debug('Error fetching banner:', error.message)
+      const error = await response.json().catch(() => ({}))
+      console.debug('Error fetching banner:', error.error || response.statusText)
       return null
     }
 
-    // Extract banner_key from the joined data
-    const bannerData = userProfile?.user_banners as any
-    const bannerKey = Array.isArray(bannerData)
-      ? bannerData[0]?.banner_key
-      : bannerData?.banner_key
-
-    if (!bannerKey) {
+    const result = await response.json()
+    
+    if (!result.success || !result.url) {
       return null
     }
-
-    // Get public URL from storage
-    const { data: { publicUrl } } = supabase.storage
-      .from(PROFILE_PICS_BUCKET)
-      .getPublicUrl(bannerKey)
-
-    if (cacheBust) {
-      const separator = publicUrl.includes('?') ? '&' : '?'
-      return `${publicUrl}${separator}t=${Date.now()}`
-    }
-
-    return publicUrl
+    
+    return result.url
   } catch (error: any) {
     console.debug('Error fetching banner:', error?.message || error)
     return null

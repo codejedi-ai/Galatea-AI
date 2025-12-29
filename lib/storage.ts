@@ -1,15 +1,24 @@
 import { createClient } from "@/utils/supabase/client";
 
-const PROFILE_PICS_BUCKET = 'profile-pics';
-
 /**
- * Upload a profile picture to the profile-pics bucket
+ * Upload a profile picture via Edge Function
  * Files are stored as: {userId}/{filename}
  * Updates the user_profile_pics table with the profile_pic_key
  */
 export async function uploadProfilePicture(userId: string, file: File): Promise<string> {
   const supabase = createClient();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
+  }
+
+  // Get auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('User not authenticated');
+  }
+
   // Validate file type
   if (!file.type.startsWith('image/')) {
     throw new Error('File must be an image');
@@ -21,111 +30,90 @@ export async function uploadProfilePicture(userId: string, file: File): Promise<
     throw new Error('File size must be less than 5MB');
   }
 
-  // Generate unique filename
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `${userId}/${fileName}`;
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', file);
 
-  // Delete old profile picture if exists
-  const { data: existingPic } = await supabase
-    .from('user_profile_pics')
-    .select('profile_pic_key')
-    .eq('user_id', userId)
-    .single();
+  // Call Edge Function
+  const response = await fetch(`${supabaseUrl}/functions/v1/upload-profile-picture`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+    },
+    body: formData,
+  });
 
-  if (existingPic?.profile_pic_key) {
-    try {
-      await supabase.storage
-        .from(PROFILE_PICS_BUCKET)
-        .remove([existingPic.profile_pic_key]);
-    } catch (error) {
-      console.warn('Failed to delete old profile picture:', error);
-    }
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || `Failed to upload profile picture: ${response.statusText}`);
   }
 
-  // Upload to profile-pics bucket
-  const { data, error: uploadError } = await supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
-
-  if (uploadError) {
-    throw new Error(`Failed to upload profile picture: ${uploadError.message}`);
+  const result = await response.json();
+  
+  if (!result.success || !result.url) {
+    throw new Error(result.error || 'Failed to upload profile picture');
   }
 
-  // Update user_profile_pics table with the profile_pic_key
-  const { error: tableError } = await supabase
-    .from('user_profile_pics')
-    .upsert({
-      user_id: userId,
-      profile_pic_key: filePath
-    }, {
-      onConflict: 'user_id'
-    });
-
-  if (tableError) {
-    // If table update fails, try to clean up the uploaded file
-    await supabase.storage.from(PROFILE_PICS_BUCKET).remove([filePath]);
-    throw new Error(`Failed to update profile picture record: ${tableError.message}`);
-  }
-
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  return result.url;
 }
 
 /**
- * Delete a profile picture for a user
+ * Delete a profile picture for a user via Edge Function
  * Removes the file from storage and the record from user_profile_pics table
  */
 export async function deleteProfilePicture(userId: string): Promise<void> {
   const supabase = createClient();
-
-  // Get the profile_pic_key from the table
-  const { data: profilePic, error: fetchError } = await supabase
-    .from('user_profile_pics')
-    .select('profile_pic_key')
-    .eq('user_id', userId)
-    .single();
-
-  if (fetchError || !profilePic?.profile_pic_key) {
-    // No profile picture to delete
-    return;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
   }
 
-  // Remove the file from storage
-  const { error: storageError } = await supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .remove([profilePic.profile_pic_key]);
-
-  if (storageError) {
-    throw new Error(`Failed to delete profile picture from storage: ${storageError.message}`);
+  // Get auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('User not authenticated');
   }
 
-  // Remove the record from user_profile_pics table
-  const { error: tableError } = await supabase
-    .from('user_profile_pics')
-    .delete()
-    .eq('user_id', userId);
+  // Call Edge Function
+  const response = await fetch(`${supabaseUrl}/functions/v1/delete-profile-picture`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-  if (tableError) {
-    console.error('Failed to delete profile picture record:', tableError);
-    // Don't throw here since the file is already deleted
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || `Failed to delete profile picture: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to delete profile picture');
   }
 }
 
 /**
- * Upload a banner to the profile-pics bucket
+ * Upload a banner via Edge Function
  * Files are stored as: {userId}/banner/{filename}
  * Updates the user_banners table with the banner_key
  */
 export async function uploadBanner(userId: string, file: File): Promise<string> {
   const supabase = createClient();
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
+  }
+
+  // Get auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('User not authenticated');
+  }
 
   // Validate file type
   if (!file.type.startsWith('image/')) {
@@ -138,100 +126,92 @@ export async function uploadBanner(userId: string, file: File): Promise<string> 
     throw new Error('File size must be less than 5MB');
   }
 
-  // Generate unique filename
-  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-  const filePath = `${userId}/banner/${fileName}`;
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', file);
 
-  // Delete old banner if exists
-  const { data: existingBanner } = await supabase
-    .from('user_banners')
-    .select('banner_key')
-    .eq('user_id', userId)
-    .single();
+  // Call Edge Function
+  let response: Response;
+  try {
+    response = await fetch(`${supabaseUrl}/functions/v1/upload-banner`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: formData,
+    });
+  } catch (networkError) {
+    // Network error - function might not be running
+    throw new Error(
+      'Failed to connect to upload service. Please ensure Supabase Edge Functions are running. ' +
+      'Run: cd Galatea-AI-Supabase && npx supabase functions serve'
+    );
+  }
 
-  if (existingBanner?.banner_key) {
+  if (!response.ok) {
+    let errorData;
     try {
-      await supabase.storage
-        .from(PROFILE_PICS_BUCKET)
-        .remove([existingBanner.banner_key]);
-    } catch (error) {
-      console.warn('Failed to delete old banner:', error);
+      errorData = await response.json();
+    } catch {
+      // If response isn't JSON, use status text
+      errorData = { error: response.statusText || 'Unknown error' };
     }
+    
+    // Provide helpful error message for 404/503
+    if (response.status === 404 || response.status === 503) {
+      throw new Error(
+        'Upload service is not available. Please ensure Edge Functions are running: ' +
+        'cd Galatea-AI-Supabase && npx supabase functions serve'
+      );
+    }
+    
+    throw new Error(errorData.error || `Failed to upload banner: ${response.statusText}`);
   }
 
-  // Upload to profile-pics bucket
-  const { data, error: uploadError } = await supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
-
-  if (uploadError) {
-    throw new Error(`Failed to upload banner: ${uploadError.message}`);
+  const result = await response.json();
+  
+  if (!result.success || !result.url) {
+    throw new Error(result.error || 'Failed to upload banner');
   }
 
-  // Update user_banners table with the banner_key
-  const { error: tableError } = await supabase
-    .from('user_banners')
-    .upsert({
-      user_id: userId,
-      banner_key: filePath
-    }, {
-      onConflict: 'user_id'
-    });
-
-  if (tableError) {
-    // If table update fails, try to clean up the uploaded file
-    await supabase.storage.from(PROFILE_PICS_BUCKET).remove([filePath]);
-    throw new Error(`Failed to update banner record: ${tableError.message}`);
-  }
-
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .getPublicUrl(filePath);
-
-  return publicUrl;
+  return result.url;
 }
 
 /**
- * Delete a banner for a user
+ * Delete a banner for a user via Edge Function
  * Removes the file from storage and the record from user_banners table
  */
 export async function deleteBanner(userId: string): Promise<void> {
   const supabase = createClient();
-
-  // Get the banner_key from the table
-  const { data: banner, error: fetchError } = await supabase
-    .from('user_banners')
-    .select('banner_key')
-    .eq('user_id', userId)
-    .single();
-
-  if (fetchError || !banner?.banner_key) {
-    // No banner to delete
-    return;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  
+  if (!supabaseUrl) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set');
   }
 
-  // Remove the file from storage
-  const { error: storageError } = await supabase.storage
-    .from(PROFILE_PICS_BUCKET)
-    .remove([banner.banner_key]);
-
-  if (storageError) {
-    throw new Error(`Failed to delete banner from storage: ${storageError.message}`);
+  // Get auth token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('User not authenticated');
   }
 
-  // Remove the record from user_banners table
-  const { error: tableError } = await supabase
-    .from('user_banners')
-    .delete()
-    .eq('user_id', userId);
+  // Call Edge Function
+  const response = await fetch(`${supabaseUrl}/functions/v1/delete-banner`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-  if (tableError) {
-    console.error('Failed to delete banner record:', tableError);
-    // Don't throw here since the file is already deleted
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || `Failed to delete banner: ${response.statusText}`);
+  }
+
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Failed to delete banner');
   }
 }

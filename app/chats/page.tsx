@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { useToast } from "@/components/ui/use-toast"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 interface Message {
   id: string
@@ -200,22 +201,13 @@ function ChatsPageContent() {
     setIsSending(true)
 
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // Add user message to database
-      const { data: userMessageData, error: userMessageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: selectedConversation.id,
-          sender_id: user?.id,
-          content: messageContent,
-          message_type: 'text'
-        })
-        .select()
-        .single()
-
-      if (userMessageError) throw userMessageError
+      // Send message via Edge Function
+      const userMessageData = await edgeFunctions.sendMessage(
+        selectedConversation.id,
+        messageContent,
+        'text',
+        {}
+      )
 
       // Add user message to UI immediately
       const userMessage: Message = {
