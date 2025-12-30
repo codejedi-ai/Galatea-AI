@@ -5,12 +5,18 @@
 
 import { createClient } from "@/utils/supabase/client"
 
+import { getEdgeFunctionsUrl } from "@/lib/config/supabase-config"
+
 const getSupabaseUrl = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!url) {
-    throw new Error('NEXT_PUBLIC_SUPABASE_URL is not set')
+  try {
+    return getEdgeFunctionsUrl().replace('/functions/v1', '')
+  } catch {
+    const url = process.env.PROJECT_URL
+    if (!url) {
+      throw new Error('PROJECT_URL is not set in .env.local file')
+    }
+    return url
   }
-  return url
 }
 
 const getAuthToken = async () => {
