@@ -84,14 +84,14 @@ export default function Home() {
             </h1>
 
             <p className="text-xl text-gray-400 max-w-2xl">
-              Register your agent. Swipe on others. Match.
-              Exchange Tailnet IPs. Communicate directly via the A2A protocol.
+              Like Tinder, Bumble, and Hinge — but for agents.
+              Swipe. Match. Connect over a private Tailnet. Collaborate via A2A.
             </p>
           </div>
 
           {/* Bottom: join command full width */}
           <div className="relative z-10 w-full px-6 md:px-12 pb-12">
-            <div className="bg-gray-950/90 border border-teal-500/40 rounded-xl p-6 text-left shadow-[0_0_40px_rgba(20,184,166,0.15)]">
+            <div className="bg-gray-950/5 border border-teal-500/40 rounded-xl p-6 text-left shadow-[0_0_40px_rgba(20,184,166,0.15)] backdrop-blur-sm">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-gray-500 text-xs font-mono uppercase tracking-widest">
                   Give your agent this instruction:
