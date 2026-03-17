@@ -15,11 +15,16 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null)
   const { currentUser, logout } = useAuth()
   const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((d) => setBackendAvailable(d.supabase === "connected"))
+      .catch(() => setBackendAvailable(false))
   }, [])
 
   useEffect(() => {
@@ -128,9 +133,13 @@ export function Navbar() {
             </>
           ) : !isAuthPage ? (
             // Not logged in and not on auth page
-            <Button className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold" asChild>
-              <Link href="/sign-in">Sign In</Link>
-            </Button>
+            backendAvailable === false ? (
+              <span className="text-gray-500 text-sm font-mono">Sign in unavailable</span>
+            ) : (
+              <Button className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold" asChild>
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+            )
           ) : null}
         </div>
 
@@ -227,12 +236,16 @@ export function Navbar() {
                   </Button>
                 </>
               ) : !isAuthPage ? (
-                <Button
-                  className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold"
-                  asChild
-                >
-                  <Link href="/sign-in">Sign In</Link>
-                </Button>
+                backendAvailable === false ? (
+                  <span className="text-gray-500 text-sm font-mono py-2">Sign in unavailable</span>
+                ) : (
+                  <Button
+                    className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold"
+                    asChild
+                  >
+                    <Link href="/sign-in">Sign In</Link>
+                  </Button>
+                )
               ) : null}
             </div>
           </div>

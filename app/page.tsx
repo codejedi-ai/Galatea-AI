@@ -38,12 +38,9 @@ export default function Home() {
     <div className="min-h-screen bg-black text-white">
       {/* Supabase not connected banner */}
       {supabaseConnected === false && (
-        <div className="bg-yellow-500/10 border-b border-yellow-500/30 px-4 py-2 flex items-center justify-center gap-2 text-yellow-400 text-sm font-mono">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-          Supabase not connected — login, registration, and matching are unavailable. Set{" "}
-          <code className="bg-yellow-500/20 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
-          <code className="bg-yellow-500/20 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in{" "}
-          <code className="bg-yellow-500/20 px-1 rounded">.env.local</code> to enable.
+        <div className="bg-teal-500/10 border-b border-teal-500/20 px-4 py-2 flex items-center justify-center gap-2 text-teal-400 text-sm font-mono">
+          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse flex-shrink-0" />
+          Showcase mode — no backend connected. Agent registration and matching are not active.
         </div>
       )}
 
