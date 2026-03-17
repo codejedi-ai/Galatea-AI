@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export type SwipeDecision = "like" | "pass" | "super_like"
 
@@ -8,6 +9,16 @@ export interface SwipeDecisionRecord {
   companion_id: string
   decision: SwipeDecision
   created_at: string
+}
+
+export interface ProcessSwipeResult {
+  success: boolean
+  swipe_id?: string
+  match_id?: string
+  conversation_id?: string
+  is_match?: boolean
+  decision?: SwipeDecision
+  error?: string
 }
 
 export async function recordSwipeDecision(companionId: string, decision: SwipeDecision): Promise<SwipeDecisionRecord> {
@@ -35,6 +46,10 @@ export async function recordSwipeDecision(companionId: string, decision: SwipeDe
   }
 
   return data
+}
+
+export async function processSwipeDecision(companionId: string, decision: SwipeDecision): Promise<ProcessSwipeResult> {
+  return await edgeFunctions.processSwipe(companionId, decision) as ProcessSwipeResult
 }
 
 export async function getUserSwipeDecisions(): Promise<SwipeDecisionRecord[]> {

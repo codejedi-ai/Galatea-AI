@@ -49,10 +49,10 @@ export default function AuthCodeErrorPage({
             ) : null}
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-[#5865F2] text-white hover:bg-[#4752C4]">
-                <Link href={`/sign-in?next=${encodeURIComponent(next)}`}>
+              <Button asChild variant="secondary" className="bg-zinc-800 text-white hover:bg-zinc-700">
+                <Link href="/sign-in">
                   <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Try Discord again
+                  Try again
                 </Link>
               </Button>
 
@@ -62,21 +62,10 @@ export default function AuthCodeErrorPage({
                   Go back
                 </Link>
               </Button>
-
-              <Button
-                asChild
-                variant="outline"
-                className="border-teal-500/30 text-teal-300 hover:bg-teal-500/10 bg-transparent"
-              >
-                <Link href="/auth/callback/route-docs" prefetch={false}>
-                  View setup tips
-                </Link>
-              </Button>
             </div>
 
             <div className="pt-4 text-sm text-zinc-400">
-              If this keeps happening, ensure your Discord provider is enabled in your Supabase project and that the
-              callback URL points to /auth/callback in this app.
+              If this keeps happening, please try signing in again or contact support.
             </div>
           </CardContent>
         </Card>

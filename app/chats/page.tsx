@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { createClient } from "@/utils/supabase/client"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { useToast } from "@/components/ui/use-toast"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 interface Message {
   id: string
@@ -35,6 +36,11 @@ interface Conversation {
   }
   last_message_at: string
   unreadCount: number
+  last_message?: {
+    content: string
+    created_at: string
+    sender_id?: string
+  }
   messages?: Message[]
 }
 
@@ -103,9 +109,10 @@ function ChatsPageContent() {
 
       if (conversationsError) throw conversationsError
 
-      // Get unread counts for each conversation
+      // Get unread counts and last message for each conversation
       const conversationsWithUnread = await Promise.all(
         (conversationsData || []).map(async (conv: any) => {
+          // Get unread count
           const { count } = await supabase
             .from('messages')
             .select('*', { count: 'exact', head: true })
@@ -113,11 +120,21 @@ function ChatsPageContent() {
             .eq('is_read', false)
             .is('sender_id', null) // Only count companion messages
 
+          // Get last message
+          const { data: lastMessage } = await supabase
+            .from('messages')
+            .select('content, created_at, sender_id')
+            .eq('conversation_id', conv.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+
           return {
             id: conv.id,
             companion: conv.companions,
             last_message_at: conv.last_message_at,
-            unreadCount: count || 0
+            unreadCount: count || 0,
+            last_message: lastMessage || undefined
           }
         })
       )
@@ -184,22 +201,13 @@ function ChatsPageContent() {
     setIsSending(true)
 
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      // Add user message to database
-      const { data: userMessageData, error: userMessageError } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: selectedConversation.id,
-          sender_id: user?.id,
-          content: messageContent,
-          message_type: 'text'
-        })
-        .select()
-        .single()
-
-      if (userMessageError) throw userMessageError
+      // Send message via Edge Function
+      const userMessageData = await edgeFunctions.sendMessage(
+        selectedConversation.id,
+        messageContent,
+        'text',
+        {}
+      )
 
       // Add user message to UI immediately
       const userMessage: Message = {
@@ -211,6 +219,25 @@ function ChatsPageContent() {
         is_read: true
       }
       setMessages(prev => [...prev, userMessage])
+      
+      // Update conversation in sidebar with new last message
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === selectedConversation.id
+            ? {
+                ...c,
+                last_message: {
+                  content: messageContent,
+                  created_at: userMessageData.created_at,
+                  sender_id: userMessageData.sender_id,
+                },
+                last_message_at: userMessageData.created_at,
+              }
+            : c
+        ).sort((a, b) => 
+          new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime()
+        )
+      )
 
       // Generate AI response (simplified for now)
       const aiResponses = [
@@ -251,6 +278,23 @@ function ChatsPageContent() {
           is_read: false
         }
         setMessages(prev => [...prev, aiMessage])
+        
+        // Update conversation in sidebar with new last message
+        setConversations(prev =>
+          prev.map(c =>
+            c.id === selectedConversation.id
+              ? {
+                  ...c,
+                  last_message: {
+                    content: aiResponse,
+                    created_at: aiMessageData.created_at,
+                  },
+                  last_message_at: aiMessageData.created_at,
+                  unreadCount: c.unreadCount + 1
+                }
+              : c
+          )
+        )
       }, 1000 + Math.random() * 2000) // Random delay between 1-3 seconds
 
     } catch (error) {
@@ -302,11 +346,11 @@ function ChatsPageContent() {
       <div className="min-h-screen bg-black">
         <Navbar />
 
-        <main className="pt-20 pb-8">
-          <div className="container mx-auto px-4 max-w-7xl">
-            <div className="flex h-[calc(100vh-8rem)] bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
+        <main className="pt-20">
+          <div className="w-full h-[calc(100vh-5rem)]">
+            <div className="flex h-full bg-gray-900 overflow-hidden">
               {/* Conversations Sidebar */}
-              <div className="w-1/3 border-r border-gray-800 flex flex-col">
+              <div className="w-80 border-r border-gray-800 flex flex-col bg-gray-900">
                 {/* Sidebar Header */}
                 <div className="p-4 border-b border-gray-800">
                   <div className="flex items-center justify-between mb-4">
@@ -342,7 +386,7 @@ function ChatsPageContent() {
                       <MessageCircle className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                       <p className="text-gray-400 mb-4">No conversations yet</p>
                       <Button asChild size="sm" className="bg-teal-500 text-black hover:bg-teal-400">
-                        <Link href="/swipe/enhanced">Start Swiping</Link>
+                        <Link href="/swipe">Start Swiping</Link>
                       </Button>
                     </div>
                   ) : (
@@ -372,17 +416,28 @@ function ChatsPageContent() {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between mb-1">
                                   <h3 className="font-semibold text-white truncate">
                                     {conversation.companion.name}
                                   </h3>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
                                     {getTimeAgo(conversation.last_message_at)}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-400 truncate">
-                                  {conversation.companion.personality}
-                                </p>
+                                {conversation.last_message ? (
+                                  <p className={`text-sm truncate ${
+                                    conversation.unreadCount > 0 
+                                      ? 'text-white font-medium' 
+                                      : 'text-gray-400'
+                                  }`}>
+                                    {conversation.last_message.sender_id ? 'You: ' : ''}
+                                    {conversation.last_message.content}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-gray-400 truncate italic">
+                                    No messages yet
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </CardContent>

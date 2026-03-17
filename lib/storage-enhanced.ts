@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export interface UploadResult {
   url: string
@@ -118,20 +119,21 @@ export async function deleteImage(
   }
 }
 
-// Upload user avatar
+// Upload user avatar - now uses Edge Function
 export async function uploadAvatar(file: File, userId: string): Promise<UploadResult> {
-  const result = await uploadImage(file, 'avatars', userId)
-  
-  if (result.url && !result.error) {
-    // Update user profile with new avatar URL
-    const supabase = createClient()
-    await supabase
-      .from('user_profiles')
-      .update({ avatar_url: result.url })
-      .eq('id', userId)
+  try {
+    const url = await edgeFunctions.uploadAvatar(file)
+    return {
+      url,
+      path: '', // Path is managed by Edge Function
+    }
+  } catch (error) {
+    return {
+      url: '',
+      path: '',
+      error: error instanceof Error ? error.message : 'Upload failed'
+    }
   }
-  
-  return result
 }
 
 // Get signed URL for private files (if needed)

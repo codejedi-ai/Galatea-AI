@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export interface UserProfile {
   id: string
@@ -10,7 +10,6 @@ export interface UserProfile {
   personality_traits: string[]
   preferences: Record<string, any>
   avatar_url?: string
-  metamask_wallet_address?: string | null
   is_active: boolean
   last_active_at: string
   created_at: string
@@ -44,113 +43,33 @@ export interface UserStats {
   updated_at: string
 }
 
+/**
+ * Ensures a user profile exists via Edge Function
+ */
+async function ensureUserProfileExists(userId: string): Promise<void> {
+  await edgeFunctions.ensureUserProfile()
+}
+
 export async function getUserProfile(): Promise<UserProfile | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase.from("user_profiles").select("*").eq("id", user.id).single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw new Error(`Failed to fetch user profile: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.getUserProfile()
 }
 
 export async function updateUserProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase.from("user_profiles").update(updates).eq("id", user.id).select().single()
-
-  if (error) {
-    throw new Error(`Failed to update user profile: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.updateUserProfile(updates)
 }
 
 export async function getUserPreferences(): Promise<UserPreferences | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase.from("user_preferences").select("*").eq("user_id", user.id).single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw new Error(`Failed to fetch user preferences: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.getUserPreferences()
 }
 
 export async function updateUserPreferences(updates: Partial<UserPreferences>): Promise<UserPreferences> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .update(updates)
-    .eq("user_id", user.id)
-    .select()
-    .single()
-
-  if (error) {
-    throw new Error(`Failed to update user preferences: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.updateUserPreferences(updates)
 }
 
 export async function getUserStats(): Promise<UserStats | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-
-  const { data, error } = await supabase.from("user_stats").select("*").eq("user_id", user.id).single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw new Error(`Failed to fetch user stats: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.getUserStats()
 }
 
 export async function updateLastActive(): Promise<void> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return
-
-  const { error } = await supabase
-    .from("user_profiles")
-    .update({ last_active_at: new Date().toISOString() })
-    .eq("id", user.id)
-
-  if (error) {
-    console.error("Failed to update last active:", error.message)
-  }
+  await edgeFunctions.updateLastActive()
 }

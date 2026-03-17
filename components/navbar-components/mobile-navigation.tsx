@@ -1,9 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { User, LogOut } from "lucide-react"
 import { MobileNavProps } from "./navbar-types"
+import { getUserAvatarUrl } from "@/lib/utils/avatar"
 
 export function MobileNavigation({ 
   currentUser, 
@@ -13,6 +16,19 @@ export function MobileNavigation({
   isMobileMenuOpen,
   setIsMobileMenuOpen
 }: MobileNavProps) {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (currentUser) {
+      getUserAvatarUrl(currentUser).then(url => {
+        setAvatarUrl(url)
+      }).catch(() => {
+        setAvatarUrl(null)
+      })
+    } else {
+      setAvatarUrl(null)
+    }
+  }, [currentUser])
   if (!isMobileMenuOpen) return null
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false)
@@ -37,11 +53,11 @@ export function MobileNavigation({
               Profile
             </Link>
             <Link
-              href="/swipe/enhanced"
+              href="/swipe"
               className="text-gray-300 hover:text-teal-400 transition-colors py-2"
               onClick={closeMobileMenu}
             >
-              Discover
+              Swipe
             </Link>
           </>
         )}
@@ -54,11 +70,13 @@ export function MobileNavigation({
             <>
               <div className="flex items-center space-x-3 text-gray-300 py-2">
                 {/* Profile Picture */}
-                {currentUser.user_metadata?.avatar_url ? (
-                  <img
-                    src={currentUser.user_metadata.avatar_url || "/placeholder.svg"}
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
                     alt="Profile"
-                    className="w-8 h-8 rounded-full border-2 border-teal-500"
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 rounded-full border-2 border-teal-500 object-cover"
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">

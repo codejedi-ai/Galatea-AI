@@ -7,18 +7,16 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Navbar } from "@/components/navbar"
 import { ProtectedRoute } from "@/components/protected-route"
 import { LoadingSpinner } from "@/components/loading-spinner"
-import { MetaMaskConnector } from "@/components/metamask-connector"
 import { useAuth } from "@/contexts/simple-auth-context"
 import { uploadProfilePicture, deleteProfilePicture } from "@/lib/storage"
 import { createClient } from "@/utils/supabase/client"
 import { CheckCircleIcon, UserIcon, Camera, Trash2, Upload, Facebook, Instagram, Mail, Link2, Link2Off, AlertCircle } from "lucide-react"
 
 export default function Profile() {
-  const { currentUser, logout, linkWithGoogle, linkWithFacebook, unlinkProvider } = useAuth()
+  const { currentUser, logout, refreshUser } = useAuth()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [displayName, setDisplayName] = useState(currentUser?.user_metadata?.display_name || "")
@@ -76,9 +74,20 @@ export default function Profile() {
     setSuccessMessage("")
 
     try {
-      await uploadProfilePicture(currentUser.id, file)
+      // Upload and get the new avatar URL immediately
+      const newAvatarUrl = await uploadProfilePicture(currentUser.id, file)
+      
+      // Update local state immediately for real-time display
+      setAvatarUrl(newAvatarUrl)
+      setAvatarTimestamp(Date.now()) // Force image reload with cache-busting
+      
+      // Refresh user data in background to sync with auth context
+      refreshUser().catch(err => console.error("Error refreshing user:", err))
+      
       setSuccessMessage("Profile picture updated successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      setTimeout(() => {
+        setSuccessMessage("")
+      }, 3000)
     } catch (err: any) {
       setError(err.message || "Failed to upload profile picture")
     } finally {
@@ -98,9 +107,20 @@ export default function Profile() {
     setSuccessMessage("")
 
     try {
+      // Delete profile picture using userId
       await deleteProfilePicture(currentUser.id)
+      
+      // Clear local avatar URL immediately
+      setAvatarUrl(null)
+      setAvatarTimestamp(Date.now()) // Force image reload
+      
+      // Refresh user data in background
+      refreshUser().catch(err => console.error("Error refreshing user:", err))
+      
       setSuccessMessage("Profile picture removed successfully!")
-      setTimeout(() => setSuccessMessage(""), 3000)
+      setTimeout(() => {
+        setSuccessMessage("")
+      }, 3000)
     } catch (err: any) {
       setError(err.message || "Failed to remove profile picture")
     } finally {
@@ -247,19 +267,32 @@ export default function Profile() {
             {/* Header */}
             <div className="text-center mb-8">
               {/* Profile Picture Section */}
-              <div className="relative mx-auto h-32 w-32 mb-6">
-                <div className="relative h-full w-full rounded-full overflow-hidden bg-gray-900 border-4 border-gray-800">
-                  {currentUser?.user_metadata?.avatar_url ? (
+              <div className="relative mx-auto h-32 w-32 mb-4">
+                <div 
+                  className="relative h-full w-full rounded-full overflow-hidden bg-gray-900 border-4 border-gray-800 cursor-pointer group"
+                  onClick={handleProfilePictureClick}
+                >
+                  {avatarUrl ? (
                     <Image
-                      src={currentUser.user_metadata.avatar_url || "/placeholder.svg"}
+                      key={`${avatarUrl}-${avatarTimestamp}`}
+                      src={`${avatarUrl}?t=${avatarTimestamp}`}
                       alt="Profile"
                       fill
                       className="object-cover"
                       sizes="128px"
+                      unoptimized
+                      priority
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center bg-gray-800">
                       <UserIcon className="h-16 w-16 text-gray-400" />
+                    </div>
+                  )}
+
+                  {/* Hover overlay */}
+                  {!isUploadingImage && (
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="h-8 w-8 text-white" />
                     </div>
                   )}
 
@@ -271,25 +304,6 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* Camera button */}
-                <button
-                  onClick={triggerFileInput}
-                  disabled={isUploadingImage}
-                  className="absolute bottom-0 right-0 bg-teal-500 hover:bg-teal-400 text-black p-2 rounded-full shadow-lg transition-colors disabled:opacity-50"
-                >
-                  <Camera className="h-4 w-4" />
-                </button>
-
-                {/* Delete button (only show if user has a photo) */}
-                {currentUser?.user_metadata?.avatar_url && (
-                  <button
-                    onClick={handleDeleteImage}
-                    disabled={isUploadingImage}
-                    className="absolute bottom-0 left-0 bg-red-500 hover:bg-red-400 text-white p-2 rounded-full shadow-lg transition-colors disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
               </div>
 
               {/* Hidden file input */}
@@ -445,6 +459,49 @@ export default function Profile() {
         </main>
 
         <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-gray-950 to-transparent -z-10"></div>
+
+        {/* Change Profile Picture Dialog */}
+        <Dialog open={showChangePictureDialog} onOpenChange={setShowChangePictureDialog}>
+          <DialogContent className="bg-gray-900 border-gray-700 text-white sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-white">Change Profile Picture</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Choose an option to update your profile picture
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-4">
+              <Button
+                type="button"
+                onClick={handleUploadClick}
+                disabled={isUploadingImage}
+                className="w-full bg-teal-500 text-black hover:bg-teal-400 justify-start"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                {avatarUrl ? "Upload New Picture" : "Upload Picture"}
+              </Button>
+              {avatarUrl && (
+                <Button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  disabled={isUploadingImage}
+                  variant="outline"
+                  className="w-full border-red-500 text-red-400 hover:bg-red-500/10 hover:text-red-300 justify-start"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove Current Picture
+                </Button>
+              )}
+              <Button
+                type="button"
+                onClick={() => setShowChangePictureDialog(false)}
+                variant="outline"
+                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                Cancel
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </ProtectedRoute>
   );

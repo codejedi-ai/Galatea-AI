@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/client"
+import { edgeFunctions } from "@/lib/edge-functions"
 import type { Companion } from "./companions"
 
 export interface Match {
@@ -10,68 +10,40 @@ export interface Match {
   companion?: Companion
 }
 
-export async function getUserMatches(): Promise<Match[]> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase
-    .from("matches")
-    .select(`
-      *,
-      companion:companions(*)
-    `)
-    .eq("user_id", user.id)
-    .eq("is_active", true)
-    .order("matched_at", { ascending: false })
-
-  if (error) {
-    throw new Error(`Failed to fetch matches: ${error.message}`)
+export interface MatchWithDetails {
+  match_id: string
+  matched_at: string
+  companion: {
+    id: string
+    name: string
+    age: number
+    bio: string
+    image_url: string
+    personality: string
+    interests: string[]
+    compatibility_score?: number
   }
+  conversation_id?: string
+  last_message?: {
+    content: string
+    created_at: string
+    sender_id?: string
+  }
+  unread_count: number
+}
 
-  return data || []
+export async function getUserMatches(): Promise<Match[]> {
+  return await edgeFunctions.getMatches()
+}
+
+export async function getUserMatchesWithDetails(): Promise<MatchWithDetails[]> {
+  return await edgeFunctions.getMatches(true) as MatchWithDetails[]
 }
 
 export async function getMatchById(matchId: string): Promise<Match | null> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { data, error } = await supabase
-    .from("matches")
-    .select(`
-      *,
-      companion:companions(*)
-    `)
-    .eq("id", matchId)
-    .eq("user_id", user.id)
-    .single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null
-    throw new Error(`Failed to fetch match: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.getMatchById(matchId)
 }
 
 export async function deactivateMatch(matchId: string): Promise<void> {
-  const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error("User not authenticated")
-
-  const { error } = await supabase.from("matches").update({ is_active: false }).eq("id", matchId).eq("user_id", user.id)
-
-  if (error) {
-    throw new Error(`Failed to deactivate match: ${error.message}`)
-  }
+  await edgeFunctions.deactivateMatch(matchId)
 }

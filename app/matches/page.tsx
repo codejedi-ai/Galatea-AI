@@ -9,34 +9,12 @@ import { ArrowLeft, MessageCircle, Heart, Sparkles, Search, Filter, Calendar, Us
 import { Navbar } from "@/components/navbar"
 import { ProtectedRoute } from "@/components/protected-route"
 import { LoadingSpinner } from "@/components/loading-spinner"
-import { createClient } from "@/utils/supabase/client"
+import { getUserMatchesWithDetails, type MatchWithDetails } from "@/lib/database/matches"
 import { useToast } from "@/components/ui/use-toast"
 
-interface Match {
-  id: string
-  companion: {
-    id: string
-    name: string
-    age: number
-    bio: string
-    image_url: string
-    personality: string
-    interests: string[]
-    compatibility_score?: number
-  }
-  matched_at: string
-  conversation_id?: string
-  last_message?: {
-    content: string
-    created_at: string
-    sender_id?: string
-  }
-  unread_count: number
-}
-
 export default function MatchesPage() {
-  const [matches, setMatches] = useState<Match[]>([])
-  const [filteredMatches, setFilteredMatches] = useState<Match[]>([])
+  const [matches, setMatches] = useState<MatchWithDetails[]>([])
+  const [filteredMatches, setFilteredMatches] = useState<MatchWithDetails[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -55,84 +33,16 @@ export default function MatchesPage() {
   const loadMatches = async () => {
     try {
       setIsLoading(true)
-      const supabase = createClient()
+      setError(null)
       
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
-
-      // Get matches with companion details and conversation info
-      const { data: matchesData, error: matchesError } = await supabase
-        .from('matches')
-        .select(`
-          id,
-          matched_at,
-          companions:companion_id (
-            id,
-            name,
-            age,
-            bio,
-            image_url,
-            personality,
-            interests,
-            compatibility_score
-          ),
-          conversations!inner (
-            id,
-            last_message_at,
-            messages!inner (
-              content,
-              created_at,
-              sender_id,
-              companion_id
-            )
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('matched_at', { ascending: false })
-
-      if (matchesError) throw matchesError
-
-      // Process matches to get last message and unread count
-      const processedMatches = await Promise.all(
-        (matchesData || []).map(async (match: any) => {
-          const conversation = match.conversations[0]
-          
-          // Get last message
-          const { data: lastMessage } = await supabase
-            .from('messages')
-            .select('content, created_at, sender_id, companion_id')
-            .eq('conversation_id', conversation.id)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
-
-          // Get unread count (messages from companion that user hasn't read)
-          const { count: unreadCount } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('conversation_id', conversation.id)
-            .eq('is_read', false)
-            .is('sender_id', null) // Messages from companion
-
-          return {
-            id: match.id,
-            companion: match.companions,
-            matched_at: match.matched_at,
-            conversation_id: conversation.id,
-            last_message: lastMessage,
-            unread_count: unreadCount || 0
-          }
-        })
-      )
-
-      setMatches(processedMatches)
-    } catch (err) {
+      const matchesData = await getUserMatchesWithDetails()
+      setMatches(matchesData)
+    } catch (err: any) {
       setError("Failed to load matches")
       console.error(err)
       toast({
         title: "Error",
-        description: "Failed to load your matches",
+        description: err.message || "Failed to load your matches",
         variant: "destructive"
       })
     } finally {
@@ -143,15 +53,17 @@ export default function MatchesPage() {
   const filterAndSortMatches = () => {
     let filtered = matches.filter(match =>
       match.companion.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.companion.personality.toLowerCase().includes(searchQuery.toLowerCase())
+      match.companion.personality.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.companion.bio.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
     // Sort matches
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'recent':
-          return new Date(b.last_message?.created_at || b.matched_at).getTime() - 
-                 new Date(a.last_message?.created_at || a.matched_at).getTime()
+          const aTime = a.last_message?.created_at || a.matched_at
+          const bTime = b.last_message?.created_at || b.matched_at
+          return new Date(bTime).getTime() - new Date(aTime).getTime()
         case 'compatibility':
           return (b.companion.compatibility_score || 0) - (a.companion.compatibility_score || 0)
         case 'activity':
@@ -215,7 +127,7 @@ export default function MatchesPage() {
                   <Filter className="h-5 w-5 text-gray-400" />
                 </Button>
                 <Button asChild className="bg-teal-500 text-black hover:bg-teal-400">
-                  <Link href="/swipe/enhanced">Keep Swiping</Link>
+                  <Link href="/swipe">Keep Swiping</Link>
                 </Button>
               </div>
             </div>
@@ -285,13 +197,13 @@ export default function MatchesPage() {
                   }
                 </p>
                 <Button asChild className="bg-teal-500 text-black hover:bg-teal-400">
-                  <Link href="/swipe/enhanced">Start Swiping</Link>
+                  <Link href="/swipe">Start Swiping</Link>
                 </Button>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredMatches.map((match) => (
-                  <Card key={match.id} className="bg-gray-900 border-gray-700 overflow-hidden group hover:border-teal-500/50 transition-all hover:scale-105">
+                  <Card key={match.match_id} className="bg-gray-900 border-gray-700 overflow-hidden group hover:border-teal-500/50 transition-all hover:scale-105">
                     <div className="relative h-64">
                       <img
                         src={match.companion.image_url}
@@ -374,29 +286,32 @@ export default function MatchesPage() {
 
                       {/* Action Buttons */}
                       <div className="flex gap-2">
-                        <Button 
-                          asChild 
-                          className="flex-1 bg-teal-500 text-black hover:bg-teal-400"
-                        >
-                          <Link href={`/chats?conversation=${match.conversation_id}`}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Chat
-                            {match.unread_count > 0 && (
-                              <span className="ml-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                                {match.unread_count}
-                              </span>
-                            )}
-                          </Link>
-                        </Button>
-                        <Button 
-                          asChild 
-                          variant="outline"
-                          className="border-gray-600 hover:bg-gray-800"
-                        >
-                          <Link href={`/memory/${match.companion.id}`}>
-                            <Users className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        {match.conversation_id ? (
+                          <Button 
+                            asChild 
+                            className="flex-1 bg-teal-500 text-black hover:bg-teal-400"
+                          >
+                            <Link href={`/chats?conversation=${match.conversation_id}`}>
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Chat
+                              {match.unread_count > 0 && (
+                                <span className="ml-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                                  {match.unread_count}
+                                </span>
+                              )}
+                            </Link>
+                          </Button>
+                        ) : (
+                          <Button 
+                            asChild 
+                            className="flex-1 bg-teal-500 text-black hover:bg-teal-400"
+                          >
+                            <Link href={`/chats?match=${match.match_id}&companion=${match.companion.id}`}>
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Start Chat
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -413,7 +328,7 @@ export default function MatchesPage() {
                   Keep swiping to discover more AI companions that match your interests
                 </p>
                 <Button asChild className="bg-teal-500 text-black hover:bg-teal-400">
-                  <Link href="/swipe/enhanced">Continue Swiping</Link>
+                  <Link href="/swipe">Continue Swiping</Link>
                 </Button>
               </div>
             )}

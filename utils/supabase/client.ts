@@ -1,13 +1,13 @@
-
 import { createBrowserClient } from "@supabase/ssr";
+import { getSupabaseUrl, getSupabaseAnonKey } from "@/lib/config/supabase-config";
 
 export const createClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseKey = getSupabaseAnonKey();
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      "Missing Supabase environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY"
+      "Missing Supabase configuration. Please ensure .env.local file exists with PROJECT_URL and SUPABASE_ANON_KEY"
     );
   }
 

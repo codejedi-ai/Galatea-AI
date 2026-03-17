@@ -6,7 +6,7 @@ import Image from "next/image"
 interface AvatarOption {
   id: string
   url: string
-  source: 'discord' | 'email' | 'upload'
+  source: 'email' | 'upload'
   label: string
 }
 

@@ -18,8 +18,8 @@ export function DesktopNavigation({ currentUser }: DesktopNavigationProps) {
           <Link href="/profile" className="text-gray-300 hover:text-teal-400 transition-colors">
             Profile
           </Link>
-          <Link href="/swipe/enhanced" className="text-gray-300 hover:text-teal-400 transition-colors">
-            Discover
+          <Link href="/swipe" className="text-gray-300 hover:text-teal-400 transition-colors">
+            Swipe
           </Link>
         </>
       )}

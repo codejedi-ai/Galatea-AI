@@ -6,7 +6,7 @@ import { createClient } from '@/utils/supabase/client'
 interface AvatarOption {
   id: string
   url: string
-  source: 'discord' | 'email' | 'upload'
+  source: 'email' | 'upload'
   label: string
 }
 
@@ -44,16 +44,6 @@ export function useProfileAvatar(userId?: string) {
       }
 
       const options: AvatarOption[] = []
-
-      // Add Discord avatar if available
-      if (user?.user_metadata?.avatar_url) {
-        options.push({
-          id: 'discord',
-          url: user.user_metadata.avatar_url,
-          source: 'discord',
-          label: 'Discord Profile Picture'
-        })
-      }
 
       // Add email gravatar if available (you can implement gravatar logic here)
       if (user?.email) {

@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/client"
 import { createClient as createServerClient } from "@/utils/supabase/server"
+import { edgeFunctions } from "@/lib/edge-functions"
 
 export interface Companion {
   id: string
@@ -21,84 +22,30 @@ export interface Companion {
   updated_at: string
 }
 
-// Client-side functions
+// Client-side functions - now use Edge Functions
 export async function getRecommendedCompanions(limit = 10): Promise<Companion[]> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase.rpc("get_recommended_companions", {
-    p_user_id: (await supabase.auth.getUser()).data.user?.id,
-    p_limit: limit,
-  })
-
-  if (error) {
-    throw new Error(`Failed to fetch recommended companions: ${error.message}`)
-  }
-
-  return data || []
+  return await edgeFunctions.getRecommendedCompanions(limit)
 }
 
 export async function getAllCompanions(): Promise<Companion[]> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase
-    .from("companions")
-    .select("*")
-    .eq("is_active", true)
-    .order("compatibility_score", { ascending: false })
-
-  if (error) {
-    throw new Error(`Failed to fetch companions: ${error.message}`)
-  }
-
-  return data || []
+  return await edgeFunctions.getCompanions()
 }
 
 export async function getCompanionById(id: string): Promise<Companion | null> {
-  const supabase = createClient()
-
-  const { data, error } = await supabase.from("companions").select("*").eq("id", id).eq("is_active", true).single()
-
-  if (error) {
-    if (error.code === "PGRST116") return null // Not found
-    throw new Error(`Failed to fetch companion: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.getCompanionById(id)
 }
 
-// Server-side functions
+// Server-side functions - now use Edge Functions
 export async function createCompanion(
   companion: Omit<Companion, "id" | "created_at" | "updated_at">,
 ): Promise<Companion> {
-  const supabase = await createServerClient()
-
-  const { data, error } = await supabase.from("companions").insert([companion]).select().single()
-
-  if (error) {
-    throw new Error(`Failed to create companion: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.createCompanion(companion)
 }
 
 export async function updateCompanion(id: string, updates: Partial<Companion>): Promise<Companion> {
-  const supabase = await createServerClient()
-
-  const { data, error } = await supabase.from("companions").update(updates).eq("id", id).select().single()
-
-  if (error) {
-    throw new Error(`Failed to update companion: ${error.message}`)
-  }
-
-  return data
+  return await edgeFunctions.updateCompanion(id, updates)
 }
 
 export async function deleteCompanion(id: string): Promise<void> {
-  const supabase = await createServerClient()
-
-  const { error } = await supabase.from("companions").update({ is_active: false }).eq("id", id)
-
-  if (error) {
-    throw new Error(`Failed to delete companion: ${error.message}`)
-  }
+  await edgeFunctions.deleteCompanion(id)
 }

@@ -1,9 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { User, Settings, LogOut } from "lucide-react"
 import { NavbarProps } from "./navbar-types"
+import { getUserAvatarUrl } from "@/lib/utils/avatar"
 
 interface UserProfileSectionProps {
   currentUser: NavbarProps["currentUser"]
@@ -18,6 +21,19 @@ export function UserProfileSection({
   mounted, 
   isAuthPage 
 }: UserProfileSectionProps) {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (currentUser) {
+      getUserAvatarUrl(currentUser).then(url => {
+        setAvatarUrl(url)
+      }).catch(() => {
+        setAvatarUrl(null)
+      })
+    } else {
+      setAvatarUrl(null)
+    }
+  }, [currentUser])
   if (!mounted) {
     // Show loading state during hydration
     return <div className="w-24 h-8 bg-gray-700 rounded animate-pulse"></div>
@@ -32,11 +48,13 @@ export function UserProfileSection({
           className="flex items-center space-x-3 text-gray-300 hover:text-teal-400 transition-colors group"
         >
           {/* Profile Picture */}
-          {currentUser.user_metadata?.avatar_url ? (
-            <img
-              src={currentUser.user_metadata.avatar_url || "/placeholder.svg"}
+          {avatarUrl ? (
+            <Image
+              src={avatarUrl}
               alt="Profile"
-              className="w-8 h-8 rounded-full border-2 border-teal-500 group-hover:border-teal-400 transition-colors"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-full border-2 border-teal-500 group-hover:border-teal-400 transition-colors object-cover"
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-teal-500 group-hover:bg-teal-400 transition-colors flex items-center justify-center">
