@@ -16,7 +16,10 @@
       "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local' | Set-Content -Encoding UTF8 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp'; Move-Item -Force 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp' 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local'\")",
       "Bash(node -e \"console.log\\(require\\(''./node_modules/tailwindcss/package.json''\\).version\\)\")",
       "Bash(npm install:*)",
-      "Bash(taskkill //F //IM node.exe)"
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
