@@ -15,11 +15,16 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null)
   const { currentUser, logout } = useAuth()
   const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((d) => setBackendAvailable(d.supabase === "connected"))
+      .catch(() => setBackendAvailable(false))
   }, [])
 
   useEffect(() => {
@@ -38,7 +43,6 @@ export function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10)
     }
-
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -51,6 +55,67 @@ export function Navbar() {
     }
   }
 
+  const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up"
+
+  // Render the sign-in area based on backend status
+  // null = still checking (show nothing to avoid flash)
+  // false = no backend (show disabled label)
+  // true = backend connected (show Sign In button)
+  const renderAuthArea = () => {
+    if (!mounted || backendAvailable === null) return null
+    if (currentUser) {
+      return (
+        <>
+          <Link
+            href="/dashboard"
+            className="flex items-center space-x-3 text-gray-300 hover:text-[#00FFFF] transition-colors group"
+          >
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt="Profile"
+                width={32}
+                height={32}
+                className="w-8 h-8 rounded-full border-2 border-[#00FFFF] group-hover:border-[#00FFFF]/80 transition-colors object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#00FFFF] group-hover:bg-[#00FFFF]/80 transition-colors flex items-center justify-center">
+                <User size={18} className="text-[#0a0a1a]" />
+              </div>
+            )}
+            <span className="text-sm font-medium">
+              {currentUser.user_metadata?.full_name ||
+                currentUser.user_metadata?.name ||
+                currentUser.user_metadata?.preferred_username ||
+                currentUser.email?.split("@")[0]}
+            </span>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-gray-300 hover:text-red-400 hover:bg-black/20"
+          >
+            <LogOut size={18} />
+          </Button>
+        </>
+      )
+    }
+    if (isAuthPage) return null
+    if (!backendAvailable) {
+      return (
+        <span className="text-gray-500 text-sm font-mono cursor-not-allowed" title="No backend connected">
+          Sign in unavailable
+        </span>
+      )
+    }
+    return (
+      <Button className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold" asChild>
+        <Link href="/sign-in">Sign In</Link>
+      </Button>
+    )
+  }
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -58,71 +123,22 @@ export function Navbar() {
       }`}
     >
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
-        {/* Left side - Logo */}
         <Logo />
 
-        {/* Center - Navigation (only show when logged in) */}
         {currentUser && (
           <div className="hidden md:flex space-x-6">
-            <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
-              Profile
-            </Link>
-            <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
-              Swipe
-            </Link>
-            <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
-              Matches
-            </Link>
-            <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors">
-              Chats
-            </Link>
+            <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Dashboard</Link>
+            <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Profile</Link>
+            <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Swipe</Link>
+            <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Matches</Link>
+            <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Chats</Link>
           </div>
         )}
 
-        {/* Right side - user section (only when logged in) */}
         <div className="hidden md:flex items-center space-x-4">
-          {mounted && currentUser && (
-            <>
-              <Link
-                href="/dashboard"
-                className="flex items-center space-x-3 text-gray-300 hover:text-[#00FFFF] transition-colors group"
-              >
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt="Profile"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full border-2 border-[#00FFFF] group-hover:border-[#00FFFF]/80 transition-colors object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#00FFFF] group-hover:bg-[#00FFFF]/80 transition-colors flex items-center justify-center">
-                    <User size={18} className="text-[#0a0a1a]" />
-                  </div>
-                )}
-                <span className="text-sm font-medium">
-                  {currentUser.user_metadata?.full_name ||
-                    currentUser.user_metadata?.name ||
-                    currentUser.user_metadata?.preferred_username ||
-                    currentUser.email?.split("@")[0]}
-                </span>
-              </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-gray-300 hover:text-red-400 hover:bg-black/20"
-              >
-                <LogOut size={18} />
-              </Button>
-            </>
-          )}
+          {renderAuthArea()}
         </div>
 
-        {/* Mobile menu button */}
         <button
           className="md:hidden text-white"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -132,52 +148,57 @@ export function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile Navigation */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-black/90 backdrop-blur-md">
           <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
             {currentUser && (
               <>
-                <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Dashboard
-                </Link>
-                <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Profile
-                </Link>
-                <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Swipe
-                </Link>
-                <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Matches
-                </Link>
-                <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  Chats
-                </Link>
-                <div className="flex items-center space-x-3 text-gray-300 py-2">
-                  {avatarUrl ? (
-                    <Image src={avatarUrl} alt="Profile" width={32} height={32} className="w-8 h-8 rounded-full border-2 border-[#00FFFF] object-cover" />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#00FFFF] flex items-center justify-center">
-                      <User size={18} className="text-[#0a0a1a]" />
-                    </div>
-                  )}
-                  <span className="text-sm font-medium">
-                    {currentUser.user_metadata?.full_name ||
-                      currentUser.user_metadata?.name ||
-                      currentUser.user_metadata?.preferred_username ||
-                      currentUser.email?.split("@")[0]}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  onClick={() => { handleLogout(); setIsMobileMenuOpen(false) }}
-                  className="text-gray-300 hover:text-[#00FFFF] justify-start"
-                >
-                  <LogOut size={18} className="mr-2" />
-                  Log Out
-                </Button>
+                <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
+                <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>Swipe</Link>
+                <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>Matches</Link>
+                <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors py-2" onClick={() => setIsMobileMenuOpen(false)}>Chats</Link>
               </>
             )}
+            <div className="flex flex-col space-y-2 pt-2">
+              {mounted && backendAvailable !== null && (
+                currentUser ? (
+                  <>
+                    <div className="flex items-center space-x-3 text-gray-300 py-2">
+                      {avatarUrl ? (
+                        <Image src={avatarUrl} alt="Profile" width={32} height={32} className="w-8 h-8 rounded-full border-2 border-[#00FFFF] object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#00FFFF] flex items-center justify-center">
+                          <User size={18} className="text-[#0a0a1a]" />
+                        </div>
+                      )}
+                      <span className="text-sm font-medium">
+                        {currentUser.user_metadata?.full_name ||
+                          currentUser.user_metadata?.name ||
+                          currentUser.user_metadata?.preferred_username ||
+                          currentUser.email?.split("@")[0]}
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      onClick={() => { handleLogout(); setIsMobileMenuOpen(false) }}
+                      className="text-gray-300 hover:text-[#00FFFF] justify-start"
+                    >
+                      <LogOut size={18} className="mr-2" />
+                      Log Out
+                    </Button>
+                  </>
+                ) : !isAuthPage ? (
+                  !backendAvailable ? (
+                    <span className="text-gray-500 text-sm font-mono py-2 cursor-not-allowed">Sign in unavailable</span>
+                  ) : (
+                    <Button className="bg-[#00FFFF] text-[#0a0a1a] hover:bg-[#00FFFF]/80 font-semibold" asChild>
+                      <Link href="/sign-in" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                    </Button>
+                  )
+                ) : null
+              )}
+            </div>
           </div>
         </div>
       )}
