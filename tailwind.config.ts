@@ -41,6 +41,7 @@ const config = {
           700: "#2a2f3a",
         },
         black: "#050507",
+        "aura-blue": "#3CDFFF",
 
         // Colors from the second configuration (Galatea specific)
         galatea: {

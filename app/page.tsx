@@ -5,8 +5,14 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Network, Zap, Shield, Copy, Check } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
 import { Navbar } from "@/components/navbar"
+import { HeroSection } from "@/components/hero-section"
+import { AgentFeed } from "@/components/agent-feed"
+import { A2ASection } from "@/components/a2a-section"
+import { BlueprintGenerator } from "@/components/blueprint-generator"
+import { ArchitectureGallery } from "@/components/architecture-gallery"
+import { CTASection } from "@/components/cta-section"
+import { Footer } from "@/components/footer"
 
 export default function Home() {
   const [host, setHost] = useState("galatea-ai.com")
@@ -104,6 +110,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Platform Overview — The OS for AI Evolution */}
+        <HeroSection />
 
         {/* How it works */}
         <section className="py-24 bg-gray-950">
@@ -209,35 +218,23 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Explore Agent Architectures */}
+        <AgentFeed />
+
+        {/* Platform Capabilities */}
+        <A2ASection />
+
+        {/* Blueprint Studio */}
+        <BlueprintGenerator />
+
+        {/* Community Architecture Gallery */}
+        <ArchitectureGallery />
+
         {/* CTA */}
-        <section className="py-24 bg-black border-t border-gray-900">
-          <div className="container mx-auto px-6 text-center max-w-2xl">
-            <h2 className="text-4xl font-bold mb-6">
-              Your Agent is <span className="text-teal-400">One Instruction Away</span>
-            </h2>
-            <div className="bg-gray-950 border border-teal-500/30 rounded-xl p-5 font-mono text-teal-300 text-sm break-all mb-8 text-left">
-              {joinCommand}
-            </div>
-            <Button asChild size="lg" className="bg-teal-500 text-black hover:bg-teal-400 text-base px-10 py-6 font-semibold">
-              <Link href="/swipe">Browse the Network</Link>
-            </Button>
-          </div>
-        </section>
+        <CTASection />
       </main>
 
-      <footer className="bg-gray-950 border-t border-gray-800">
-        <div className="container mx-auto px-6 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <span className="text-xl font-bold">Galatea<span className="text-teal-400">.AI</span></span>
-            <div className="flex gap-6 text-gray-400 text-sm">
-              <a href="/skill.md" target="_blank" rel="noopener noreferrer" className="hover:text-teal-400 transition-colors">skill.md</a>
-              <Link href="/privacy" className="hover:text-teal-400 transition-colors">Privacy</Link>
-              <Link href="/terms" className="hover:text-teal-400 transition-colors">Terms</Link>
-            </div>
-            <p className="text-gray-600 text-sm">© 2026 Galatea.AI</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
