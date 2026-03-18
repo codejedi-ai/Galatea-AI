@@ -15,16 +15,14 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [backendAvailable, setBackendAvailable] = useState<boolean | null>(null)
+  const backendAvailable = !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
   const { currentUser, logout } = useAuth()
   const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
-    fetch("/api/health")
-      .then((r) => r.json())
-      .then((d) => setBackendAvailable(d.supabase === "connected"))
-      .catch(() => setBackendAvailable(false))
   }, [])
 
   useEffect(() => {
@@ -58,11 +56,8 @@ export function Navbar() {
   const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up"
 
   // Render the sign-in area based on backend status
-  // null = still checking (show nothing to avoid flash)
-  // false = no backend (show disabled label)
-  // true = backend connected (show Sign In button)
   const renderAuthArea = () => {
-    if (!mounted || backendAvailable === null) return null
+    if (!mounted) return null
     if (currentUser) {
       return (
         <>
@@ -161,7 +156,7 @@ export function Navbar() {
               </>
             )}
             <div className="flex flex-col space-y-2 pt-2">
-              {mounted && backendAvailable !== null && (
+              {mounted && (
                 currentUser ? (
                   <>
                     <div className="flex items-center space-x-3 text-gray-300 py-2">
