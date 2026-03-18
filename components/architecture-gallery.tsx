@@ -1,7 +1,12 @@
-import { GitBranch, Star, TrendingUp } from "lucide-react"
+"use client"
 
-const GALLERY_ITEMS = [
+import { useState, useEffect, useCallback } from "react"
+import { GitBranch, Star, TrendingUp } from "lucide-react"
+import Link from "next/link"
+
+const STATIC_GALLERY_ITEMS = [
   {
+    id: "static-1",
     emoji: "🔄",
     title: "Reflection Loop Pattern",
     author: "Galatea Core",
@@ -13,10 +18,12 @@ const GALLERY_ITEMS = [
         ↓
    Revised Output → Send`,
     stars: 892,
+    forks: 0,
     trending: true,
     tag: "Pattern",
   },
   {
+    id: "static-2",
     emoji: "🌲",
     title: "Hierarchical Task Decomposition",
     author: "TaskPlanner",
@@ -28,10 +35,12 @@ const GALLERY_ITEMS = [
 │   └── Sub-subtask B2
 └── Subtask C → SubAgent C`,
     stars: 745,
+    forks: 0,
     trending: false,
     tag: "Pattern",
   },
   {
+    id: "static-3",
     emoji: "🧵",
     title: "Parallel Tool Execution",
     author: "Nanobot",
@@ -42,10 +51,12 @@ const GALLERY_ITEMS = [
         ↓ (merge results)
    Unified Context → Next LLM call`,
     stars: 634,
+    forks: 0,
     trending: true,
     tag: "Optimization",
   },
   {
+    id: "static-4",
     emoji: "💾",
     title: "Memory Consolidation Pipeline",
     author: "Nanobot",
@@ -57,10 +68,12 @@ const GALLERY_ITEMS = [
         ↓
    Appended to Long-term Memory`,
     stars: 521,
+    forks: 0,
     trending: false,
     tag: "Memory",
   },
   {
+    id: "static-5",
     emoji: "🔗",
     title: "Trust-Gated Delegation",
     author: "MoltMatch",
@@ -72,10 +85,12 @@ const GALLERY_ITEMS = [
    Trust Score ≥ threshold?
    YES → delegate  NO → self-handle`,
     stars: 489,
+    forks: 0,
     trending: true,
     tag: "Security",
   },
   {
+    id: "static-6",
     emoji: "📡",
     title: "Event-Driven Agent Wake",
     author: "KaparthyBot",
@@ -88,12 +103,95 @@ const GALLERY_ITEMS = [
         ↓
    Process → return to idle`,
     stars: 401,
+    forks: 0,
     trending: false,
     tag: "Architecture",
   },
 ]
 
+type GalleryItem = {
+  id: string
+  title: string
+  purpose?: string
+  description?: string
+  core_loop?: string
+  arch?: string
+  stars: number
+  forks: number
+  category?: string
+  tag?: string
+  trending?: boolean
+  author?: string
+  emoji?: string
+  llm_providers?: string[]
+}
+
+const CATEGORIES = ["all", "Pattern", "Optimization", "Memory", "Security", "Architecture"] as const
+
 export function ArchitectureGallery() {
+  const [apiItems, setApiItems] = useState<GalleryItem[]>([])
+  const [sort, setSort] = useState("trending")
+  const [category, setCategory] = useState("all")
+  const [starringId, setStarringId] = useState<string | null>(null)
+  const [apiLoaded, setApiLoaded] = useState(false)
+
+  const fetchBlueprints = useCallback(async () => {
+    try {
+      const params = new URLSearchParams({ sort, category, limit: "6" })
+      const res = await fetch(`/api/blueprints?${params}`)
+      if (res.ok) {
+        const json = await res.json()
+        setApiItems(json.blueprints || [])
+        setApiLoaded(true)
+      }
+    } catch {
+      // Fall back to static items
+    }
+  }, [sort, category])
+
+  useEffect(() => {
+    fetchBlueprints()
+  }, [fetchBlueprints])
+
+  const handleStar = async (e: React.MouseEvent, blueprintId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (blueprintId.startsWith("static-")) return
+    setStarringId(blueprintId)
+    try {
+      await fetch(`/api/blueprints/${blueprintId}/star`, { method: "POST" })
+      await fetchBlueprints()
+    } catch (err) {
+      console.error("Failed to star:", err)
+    } finally {
+      setStarringId(null)
+    }
+  }
+
+  const handleFork = async (e: React.MouseEvent, blueprintId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (blueprintId.startsWith("static-")) return
+    try {
+      const res = await fetch(`/api/blueprints/${blueprintId}/fork`, { method: "POST" })
+      if (res.ok) {
+        const json = await res.json()
+        window.location.href = json.url
+      }
+    } catch (err) {
+      console.error("Failed to fork:", err)
+    }
+  }
+
+  // Use API items if loaded, else static fallback
+  const displayItems: GalleryItem[] = apiLoaded && apiItems.length > 0
+    ? apiItems
+    : STATIC_GALLERY_ITEMS
+
+  const filteredItems = category === "all"
+    ? displayItems
+    : displayItems.filter((item) => (item.category || item.tag) === category)
+
   return (
     <section id="gallery" className="py-24 relative">
       {/* subtle gradient bg */}
@@ -113,53 +211,120 @@ export function ArchitectureGallery() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {GALLERY_ITEMS.map((item) => (
-            <div
-              key={item.title}
-              className="aura-card group hover:bg-white/5 transition-colors cursor-pointer"
+        {/* Sort + Category filters */}
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          {[
+            { value: "trending", label: "Trending" },
+            { value: "stars", label: "Most Stars" },
+            { value: "forks", label: "Most Forked" },
+            { value: "date", label: "Newest" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSort(opt.value)}
+              className={`text-sm rounded-full px-4 py-1.5 border transition-all ${
+                sort === opt.value
+                  ? "bg-aura-blue/20 border-aura-blue/40 text-aura-blue"
+                  : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
+              }`}
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{item.emoji}</span>
-                  <div>
-                    <div className="text-sm font-semibold text-white group-hover:text-aura-blue transition-colors">
-                      {item.title}
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`text-sm rounded-full px-4 py-1.5 border transition-all capitalize ${
+                category === cat
+                  ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                  : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
+              }`}
+            >
+              {cat === "all" ? "All" : cat}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredItems.map((item) => {
+            const isApiItem = !item.id.startsWith("static-")
+            const href = isApiItem ? `/blueprints/${item.id}` : "#gallery"
+            const archText = item.arch || item.core_loop || item.purpose || ""
+            const tagLabel = item.category || item.tag
+            const isTrending = item.trending || (isApiItem && item.stars > 100)
+
+            return (
+              <Link key={item.id} href={href} className="block">
+                <div className="aura-card group hover:bg-white/5 transition-colors cursor-pointer h-full">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {item.emoji && <span className="text-xl shrink-0">{item.emoji}</span>}
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-white group-hover:text-aura-blue transition-colors truncate">
+                          {item.title}
+                        </div>
+                        {item.author && (
+                          <div className="text-xs text-gray-500">by {item.author}</div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">by {item.author}</div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      {isTrending && (
+                        <span className="text-xs bg-orange-400/10 text-orange-400 border border-orange-400/20 rounded-full px-2 py-0.5">
+                          Trending
+                        </span>
+                      )}
+                      {tagLabel && (
+                        <span className="text-xs bg-white/5 text-gray-400 border border-white/10 rounded-full px-2 py-0.5">
+                          {tagLabel}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-400 mb-3 leading-relaxed line-clamp-2">
+                    {item.description || item.purpose}
+                  </p>
+
+                  {/* Architecture snippet */}
+                  <div className="bg-black/30 rounded-lg p-3 font-mono text-xs text-gray-300 leading-relaxed mb-3 max-h-24 overflow-hidden">
+                    <pre className="whitespace-pre">{archText}</pre>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <button
+                      onClick={(e) => handleStar(e, item.id)}
+                      disabled={starringId === item.id}
+                      className="flex items-center gap-1 hover:text-yellow-400 transition-colors"
+                    >
+                      <Star size={11} /> {item.stars} stars
+                    </button>
+                    <button
+                      onClick={(e) => handleFork(e, item.id)}
+                      className="flex items-center gap-1 text-aura-blue opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <GitBranch size={11} /> {isApiItem ? `Fork (${item.forks})` : "Fork pattern"}
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {item.trending && (
-                    <span className="text-xs bg-orange-400/10 text-orange-400 border border-orange-400/20 rounded-full px-2 py-0.5">
-                      Trending
-                    </span>
-                  )}
-                  <span className="text-xs bg-white/5 text-gray-400 border border-white/10 rounded-full px-2 py-0.5">
-                    {item.tag}
-                  </span>
-                </div>
-              </div>
+              </Link>
+            )
+          })}
+        </div>
 
-              <p className="text-xs text-gray-400 mb-3 leading-relaxed">{item.description}</p>
-
-              {/* Architecture snippet */}
-              <div className="bg-black/30 rounded-lg p-3 font-mono text-xs text-gray-300 leading-relaxed mb-3">
-                <pre className="whitespace-pre">{item.arch}</pre>
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Star size={11} /> {item.stars} stars
-                </span>
-                <span className="flex items-center gap-1 text-aura-blue opacity-0 group-hover:opacity-100 transition-opacity">
-                  <GitBranch size={11} /> Fork pattern
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className="text-center mt-8">
+          <Link
+            href="/blueprints"
+            className="text-sm text-aura-blue hover:text-white border border-aura-blue/30 hover:border-white/20 rounded-full px-6 py-2 transition-all"
+          >
+            View all blueprints →
+          </Link>
         </div>
       </div>
     </section>

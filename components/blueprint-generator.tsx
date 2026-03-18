@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Wand2, Cpu, Copy, Check, RefreshCw } from "lucide-react"
+import { Wand2, Cpu, Copy, Check, RefreshCw, Share2 } from "lucide-react"
+import Link from "next/link"
 
 const EXAMPLE_OUTPUTS: Record<string, string> = {
   "task-planner": `🤖 TaskPlanner Agent — System Architecture Blueprint
@@ -156,13 +157,58 @@ export function BlueprintGenerator() {
   const [output, setOutput] = useState(EXAMPLE_OUTPUTS[""])
   const [copied, setCopied] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null)
+  const [publishError, setPublishError] = useState<string | null>(null)
 
   const handleGenerate = () => {
     setGenerating(true)
+    setPublishedUrl(null)
+    setPublishError(null)
     setTimeout(() => {
       setOutput(generateBlueprint(name, purpose, providers, tools, channels))
       setGenerating(false)
     }, 800)
+  }
+
+  const handlePublish = async () => {
+    if (!name || !purpose) {
+      setPublishError("Agent name and purpose are required to publish.")
+      return
+    }
+    setPublishing(true)
+    setPublishError(null)
+    try {
+      const providerList = providers.split(",").map((p) => p.trim()).filter(Boolean)
+      const toolList = tools.split(",").map((t) => t.trim()).filter(Boolean).map((t) => ({ name: t, description: "Auto-generated tool" }))
+      const channelList = channels.split(",").map((c) => c.trim()).filter(Boolean)
+
+      const res = await fetch("/api/blueprints", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${name} Agent Blueprint`,
+          version: "1.0.0",
+          purpose,
+          coreLoop: `Input → Intent Parser → LLM → Tool Dispatcher → Response\n    ↘ Memory (session + long-term)`,
+          llmProviders: providerList.length > 0 ? providerList : ["openai/gpt-4o"],
+          tools: toolList,
+          memoryLayers: ["Session", "Long-term", "Working"],
+          channels: channelList,
+          designPrinciples: ["Modular and composable", "Fail gracefully with meaningful errors", "Reflection loop on complex tasks"],
+        }),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        setPublishedUrl(json.url)
+      } else {
+        setPublishError(json.error || "Failed to publish blueprint.")
+      }
+    } catch (err) {
+      setPublishError("Failed to publish blueprint. Please try again.")
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const handleCopy = () => {
@@ -286,6 +332,30 @@ export function BlueprintGenerator() {
                 <><Wand2 size={16} /> Generate Blueprint</>
               )}
             </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full gap-2 border-aura-blue/40 text-aura-blue hover:bg-aura-blue/10"
+              onClick={handlePublish}
+              disabled={publishing}
+            >
+              {publishing ? (
+                <><RefreshCw size={16} className="animate-spin" /> Publishing...</>
+              ) : (
+                <><Share2 size={16} /> Publish Blueprint</>
+              )}
+            </Button>
+            {publishError && (
+              <p className="text-xs text-red-400">{publishError}</p>
+            )}
+            {publishedUrl && (
+              <div className="text-xs text-green-400 bg-green-400/10 border border-green-400/20 rounded-lg p-3">
+                Blueprint published!{" "}
+                <Link href={publishedUrl} className="underline hover:text-green-300">
+                  View blueprint →
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Output */}

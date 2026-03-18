@@ -1,5 +1,3 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
 import {
   BlueprintSchema,
   BlueprintNodeSchema,
@@ -8,20 +6,7 @@ import {
   validateBlueprintEdges,
   formatVersion,
   incrementPatch,
-} from '../lib/types/blueprint.ts'
-
-function expect(actual: unknown) {
-  return {
-    toBe: (expected: unknown) => assert.strictEqual(actual, expected),
-    toEqual: (expected: unknown) => assert.deepStrictEqual(actual, expected),
-    toHaveLength: (n: number) => assert.strictEqual((actual as { length: number }).length, n),
-    toContain: (item: unknown) => assert.ok(Array.isArray(actual) ? actual.includes(item) : String(actual).includes(String(item))),
-    toBeGreaterThan: (n: number) => assert.ok((actual as number) > n),
-    toBeTruthy: () => assert.ok(actual),
-    toBeFalsy: () => assert.ok(!actual),
-    not: { toBe: (expected: unknown) => assert.notStrictEqual(actual, expected) },
-  }
-}
+} from '../lib/types/blueprint'
 
 const validBlueprint = {
   agentId: "agent-123",
