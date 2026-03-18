@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Wifi, WifiOff, Loader2, Unplug } from "lucide-react"
 
@@ -82,24 +81,24 @@ export function ConnectionStatus({ matchId, apiKey, onDisconnect }: ConnectionSt
     <div className="flex items-center gap-2 flex-wrap">
       {/* State badge */}
       {state === "connecting" && (
-        <Badge variant="secondary" className="flex items-center gap-1 bg-gray-700 text-gray-300">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-700 text-gray-300">
           <Loader2 className="h-3 w-3 animate-spin" />
           Connecting
-        </Badge>
+        </span>
       )}
 
       {state === "connected" && (
-        <Badge className="flex items-center gap-1 bg-teal-500/20 text-teal-400 border border-teal-500/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-teal-500/20 text-teal-400 border border-teal-500/30">
           <Wifi className="h-3 w-3" />
           Connected
-        </Badge>
+        </span>
       )}
 
       {state === "offline" && (
-        <Badge variant="destructive" className="flex items-center gap-1 bg-red-500/20 text-red-400 border border-red-500/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-400 border border-red-500/30">
           <WifiOff className="h-3 w-3" />
           Offline
-        </Badge>
+        </span>
       )}
 
       {/* Latency indicator */}
