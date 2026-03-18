@@ -7,6 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
+    "test": "node --test __tests__/trust-scoring.test.mjs",
     "supabase:setup": "cd ../Galatea-AI-Supabase && npm run reset",
     "supabase:start": "cd ../Galatea-AI-Supabase && npm run start",
     "supabase:stop": "cd ../Galatea-AI-Supabase && npm run stop",
