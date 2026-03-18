@@ -15,14 +15,16 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const backendAvailable = !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const [backendAvailable, setBackendAvailable] = useState(false)
   const { currentUser, logout } = useAuth()
   const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
+    fetch("/api/health")
+      .then((r) => r.json())
+      .then((d) => setBackendAvailable(d.supabase === "connected"))
+      .catch(() => setBackendAvailable(false))
   }, [])
 
   useEffect(() => {
