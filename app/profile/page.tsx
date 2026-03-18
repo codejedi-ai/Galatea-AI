@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic'
+
 import { useState, useRef, useEffect } from "react"
 import type React from "react"
 import { useRouter } from "next/navigation"
@@ -7,6 +9,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Navbar } from "@/components/navbar"
 import { ProtectedRoute } from "@/components/protected-route"
 import { LoadingSpinner } from "@/components/loading-spinner"
@@ -26,6 +29,19 @@ export default function Profile() {
   const [error, setError] = useState("")
   const [connectedAccounts, setConnectedAccounts] = useState<Record<string, boolean>>({})
   const [isConnecting, setIsConnecting] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentUser?.user_metadata?.avatar_url || null)
+  const [avatarTimestamp, setAvatarTimestamp] = useState<number>(Date.now())
+  const [showChangePictureDialog, setShowChangePictureDialog] = useState(false)
+
+  const handleUploadClick = () => {
+    setShowChangePictureDialog(false)
+    document.getElementById('avatar-upload')?.click()
+  }
+
+  const handleDeleteClick = async () => {
+    setShowChangePictureDialog(false)
+    await handleDeleteImage()
+  }
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -270,7 +286,7 @@ export default function Profile() {
               <div className="relative mx-auto h-32 w-32 mb-4">
                 <div 
                   className="relative h-full w-full rounded-full overflow-hidden bg-gray-900 border-4 border-gray-800 cursor-pointer group"
-                  onClick={handleProfilePictureClick}
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
                 >
                   {avatarUrl ? (
                     <Image
@@ -370,14 +386,6 @@ export default function Profile() {
               </div>
             </form>
 
-            {/* MetaMask Wallet Connection */}
-            <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
-              <h3 className="text-sm font-medium text-white mb-3">MetaMask Wallet</h3>
-              <p className="text-xs text-gray-400 mb-4">
-                Connect your MetaMask wallet to your account. Each account can have one wallet connected.
-              </p>
-              <MetaMaskConnector showStatus={true} />
-            </div>
 
             {/* Social Media Connections */}
             <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-800">
