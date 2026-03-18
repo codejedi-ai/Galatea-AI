@@ -1,3 +1,8 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -11,6 +16,14 @@ const nextConfig = {
         hostname: 'your-supabase-project.supabase.co',
       },
     ],
+  },
+  webpack(config) {
+    // Resolve framer-motion to its CJS build to avoid missing ESM shards
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion/dist/cjs/index.js'),
+    }
+    return config
   },
   async headers() {
     return [
