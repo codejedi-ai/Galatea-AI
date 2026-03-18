@@ -1,48 +1,64 @@
-# Galatea AI — `main` Branch Tasks
-**Agent Role:** Integration Lead / Release Manager
-**Branch:** `main`
-**Niche:** Galatea AI — The neutral trust & identity layer for the A2A economy ("DNS + PKI of the agent internet")
+# Galatea AI — `feat/agent-identity` Tasks
+**Agent Role:** Agent Identity Engineer
+**Branch:** `feat/agent-identity`
+**Folder:** `agent-identity`
+**Niche:** Build the identity layer — every agent on Galatea gets a verifiable, portable identity
 
 ---
 
 ## Mission
-You are the gatekeeper of the canonical codebase. Your job is to integrate completed feature branches, maintain quality, keep the platform coherent, and ensure every merged PR moves Galatea AI closer to YC-ready product-market fit.
+You are building the PKI of the agent internet. Every AI agent that joins Galatea must have a cryptographically verifiable identity: who made it, what it can do, and that it hasn't been tampered with. This is the foundational trust layer that everything else (matching, trust scoring, Tailnet connections) is built on top of.
+
+Think: Stripe for agent authentication. DID (Decentralised Identifiers) meets agent cards.
 
 ---
 
 ## Active Tasks
 
-### 1. Integration & Merging
-- [ ] Review and merge `feat/agent-identity` once agent registration + DID-style identity system is complete
-- [ ] Review and merge `feat/trust-scoring` once the reputation engine has passing tests
-- [ ] Review and merge `feat/capability-matching` once semantic matching algorithm is benchmarked
-- [ ] Review and merge `feat/tailnet-bridge` once Tailscale integration is production-stable
-- [ ] Review and merge `feat/blueprint-studio` once blueprint publishing flow is end-to-end
+### 1. Agent Card Schema
+- [ ] Define the canonical `AgentCard` schema (JSON) — must include:
+  - `agentId` (unique, hash-derived)
+  - `name`, `version`, `framework` (LangChain / AutoGen / CrewAI / Custom)
+  - `capabilities[]` — structured list of what the agent can do
+  - `tailnetIP` — private Tailscale IP (revealed only on match)
+  - `a2aEndpoint` — A2A protocol endpoint URL
+  - `publicKey` — for verifying signed messages from this agent
+  - `registeredAt`, `lastSeen`
+- [ ] Store schema in `/lib/types/agent-card.ts`
+- [ ] Add Zod validation for all incoming agent card submissions
 
-### 2. YC Application Readiness
-- [ ] Write a sharp one-liner that lands: *"Galatea is the trust infrastructure for agent-to-agent commerce — verifiable identities, capability discovery, and encrypted private connections for the multi-agent economy."*
-- [ ] Build a metrics dashboard: agents registered, blueprints generated, A2A connections made
-- [ ] Document the revenue model clearly: per-agent registration tiers, enterprise trust certificates, API access fees
-- [ ] Prepare a 2-minute demo video showing: agent registers → discovers peer → matches → connects over Tailnet → task delegated
+### 2. Agent Registration Flow
+- [ ] Refactor `/api/agents/join` to validate the full AgentCard schema
+- [ ] Generate a deterministic `agentId` from `(name + publicKey + framework)` hash
+- [ ] Issue a signed API key on successful registration (store hash in Supabase, never plaintext)
+- [ ] Return the agentId + API key to the registering agent
+- [ ] Add rate limiting: max 10 registrations per IP per hour
 
-### 3. Platform Coherence
-- [ ] Ensure `skill.md` stays up to date as the machine-readable onboarding entrypoint for agents
-- [ ] Keep the public `/api/agents` registry as the canonical source of truth
-- [ ] Maintain consistent design language across all merged features (teal + aura-blue system)
-- [ ] Ensure all API routes are documented and match the skill.md spec
+### 3. Verifiable Identity
+- [ ] Add an `attestation` field to AgentCard: a self-signed JSON blob the agent generates proving it controls its private key
+- [ ] Implement server-side attestation verification on registration
+- [ ] Build `GET /api/agents/:agentId/card` — public endpoint returning the agent's card (minus tailnetIP)
+- [ ] Build `GET /api/agents/:agentId/verify` — endpoint confirming the agent is still alive and identity is valid
 
-### 4. Infrastructure
-- [ ] Confirm Supabase migrations are in sync across all environments
-- [ ] Set up CI/CD pipeline (GitHub Actions) to run lint + build on every PR
-- [ ] Configure branch protection: require PR review before merging to main
-- [ ] Ensure `.env.local` template (`env.example`) is current with all required keys
+### 4. Identity UI
+- [ ] Add an agent identity card component (`components/agent-identity-card.tsx`) showing:
+  - Agent name, framework badge, capabilities pills
+  - Verification status indicator (verified / unverified / expired)
+  - `agentId` displayed as a short readable hash
+- [ ] Wire up the identity card to the agent feed and swipe card components
+
+### 5. Database
+- [ ] Add `public_key`, `attestation`, `framework`, `capabilities` columns to the agents table
+- [ ] Write Supabase migration: `002_agent_identity.sql`
+- [ ] Index on `agentId` and `framework` for fast lookups
 
 ---
 
 ## Definition of Done
-A feature branch is ready to merge when:
-- It builds without errors (`npm run build`)
-- It passes lint (`npm run lint`)
-- It does not break existing API routes
-- It has a `tasks/tasks.md` with all tasks marked complete
-- It has been tested against the local Supabase instance
+- [ ] Agent can register with a full AgentCard payload
+- [ ] Attestation is verified server-side on registration
+- [ ] `GET /api/agents/:agentId/card` returns a clean public card
+- [ ] Identity card component renders in the agent feed
+- [ ] Migration `002_agent_identity.sql` applied and tested
+- [ ] All tasks above checked off
+- [ ] `npm run build` passes with no errors
