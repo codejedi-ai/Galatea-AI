@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 import { Menu, X, User } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth } from "@/contexts/simple-auth-context"
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -60,7 +60,7 @@ export function Navbar() {
                 className="flex items-center space-x-2 text-gray-300 hover:text-teal-400 transition-colors p-2 rounded-md hover:bg-black/20"
               >
                 <User size={18} />
-                <span className="text-sm">{currentUser.displayName || currentUser.email}</span>
+                <span className="text-sm">{currentUser.user_metadata?.display_name || currentUser.user_metadata?.full_name || currentUser.email}</span>
               </Link>
 
             </>
@@ -116,7 +116,7 @@ export function Navbar() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <User size={18} />
-                    <span className="text-sm">{currentUser.displayName || currentUser.email}</span>
+                    <span className="text-sm">{currentUser.user_metadata?.display_name || currentUser.user_metadata?.full_name || currentUser.email}</span>
                   </Link>
                 </>
               ) : (

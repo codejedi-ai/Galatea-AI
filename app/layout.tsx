@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
 import { Inter } from "next/font/google"
-import { AuthProvider } from "@/contexts/auth-context" // Import AuthProvider
+import { SimpleAuthProvider } from "@/contexts/simple-auth-context"
 import { Analytics } from "@vercel/analytics/next"
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,12 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-black text-white`}>
-        <AuthProvider>
-          {" "}
-          {/* Wrap with AuthProvider */}
+        <SimpleAuthProvider>
           {children}
           <Analytics />
-        </AuthProvider>
+        </SimpleAuthProvider>
       </body>
     </html>
   )

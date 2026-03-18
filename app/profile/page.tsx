@@ -17,8 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Navbar } from "@/components/navbar";
 import { ProtectedRoute } from "@/components/protected-route";
-import { useAuth } from "@/contexts/auth-context";
-import { updateProfile, updateEmail, updatePassword } from "firebase/auth";
+import { useAuth } from "@/contexts/simple-auth-context";
 import { LogOut } from "lucide-react";
 import {
   CheckCircleIcon,
@@ -38,16 +37,17 @@ export default function Profile() {
     linkWithGoogle,
     linkWithFacebook,
     unlinkProvider,
+    updateDisplayName,
+    updateUserEmail,
+    updateUserPassword,
   } = useAuth();
   const router = useRouter();
 
   // Profile form state
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -65,13 +65,15 @@ export default function Profile() {
 
   useEffect(() => {
     if (currentUser) {
-      setDisplayName(currentUser.displayName || "");
+      setDisplayName(
+        currentUser.user_metadata?.display_name ||
+          currentUser.user_metadata?.full_name ||
+          ""
+      );
       setEmail(currentUser.email || "");
 
-      // Get connected providers
-      const providers = currentUser.providerData.map(
-        (provider) => provider.providerId
-      );
+      // Get connected providers from identities
+      const providers = currentUser.identities?.map((i) => i.provider) || [];
       setConnectedProviders(providers);
     }
   }, [currentUser]);
@@ -97,12 +99,10 @@ export default function Profile() {
     setIsLoading(true);
 
     try {
-      await updateProfile(currentUser, {
-        displayName: displayName,
-      });
+      await updateDisplayName(displayName);
 
       if (email !== currentUser.email) {
-        await updateEmail(currentUser, email);
+        await updateUserEmail(email);
       }
 
       showMessage("Profile updated successfully!");
@@ -130,8 +130,7 @@ export default function Profile() {
     setIsLoading(true);
 
     try {
-      await updatePassword(currentUser, newPassword);
-      setCurrentPassword("");
+      await updateUserPassword(newPassword);
       setNewPassword("");
       setConfirmPassword("");
       showMessage("Password updated successfully!");
@@ -153,8 +152,7 @@ export default function Profile() {
       }
 
       // Refresh connected providers
-      const providers =
-        currentUser?.providerData.map((p) => p.providerId) || [];
+      const providers = currentUser?.identities?.map((i) => i.provider) || [];
       setConnectedProviders(providers);
 
       showMessage(
@@ -179,11 +177,11 @@ export default function Profile() {
       await unlinkProvider(providerId);
 
       // Refresh connected providers
-      const providers =
-        currentUser?.providerData.map((p) => p.providerId) || [];
+      const providers = currentUser?.identities?.map((i) => i.provider) || [];
       setConnectedProviders(providers);
 
-      const providerName = providerId === "google.com" ? "Google" : "Facebook";
+      const providerName =
+        providerId === "google" ? "Google" : "Facebook";
       showMessage(`${providerName} account unlinked successfully!`);
     } catch (err: any) {
       showMessage(err.message || "Failed to unlink account", true);
@@ -199,9 +197,13 @@ export default function Profile() {
     }
   };
 
-  const isGoogleConnected = connectedProviders.includes("google.com");
-  const isFacebookConnected = connectedProviders.includes("facebook.com");
-  const hasPasswordProvider = connectedProviders.includes("password");
+  const isGoogleConnected = connectedProviders.includes("google");
+  const isFacebookConnected = connectedProviders.includes("facebook");
+  const hasPasswordProvider = connectedProviders.includes("email");
+
+  const avatarUrl =
+    currentUser?.user_metadata?.avatar_url ||
+    currentUser?.user_metadata?.picture;
 
   return (
     <ProtectedRoute>
@@ -213,9 +215,9 @@ export default function Profile() {
             {/* Header */}
             <div className="text-center mb-8">
               <div className="relative mx-auto h-24 w-24 rounded-full overflow-hidden bg-gray-900 mb-4">
-                {currentUser?.photoURL ? (
+                {avatarUrl ? (
                   <Image
-                    src={currentUser.photoURL || "/placeholder.svg"}
+                    src={avatarUrl || "/placeholder.svg"}
                     alt="Profile"
                     fill
                     className="object-cover"
@@ -356,38 +358,6 @@ export default function Profile() {
                         className="space-y-6"
                       >
                         <div className="space-y-2">
-                          <Label htmlFor="currentPassword">
-                            Current Password
-                          </Label>
-                          <div className="relative">
-                            <Input
-                              id="currentPassword"
-                              type={showCurrentPassword ? "text" : "password"}
-                              value={currentPassword}
-                              onChange={(e) =>
-                                setCurrentPassword(e.target.value)
-                              }
-                              className="bg-gray-800 border-gray-700 focus:border-teal-500 text-white pr-10"
-                              placeholder="Enter current password"
-                              required
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShowCurrentPassword(!showCurrentPassword)
-                              }
-                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                            >
-                              {showCurrentPassword ? (
-                                <EyeOffIcon size={18} />
-                              ) : (
-                                <EyeIcon size={18} />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
                           <Label htmlFor="newPassword">New Password</Label>
                           <div className="relative">
                             <Input
@@ -459,8 +429,8 @@ export default function Profile() {
                       <div className="text-center py-8">
                         <KeyIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                         <p className="text-gray-400 mb-4">
-                          You're currently signed in with a social account. To
-                          enable password login, you'll need to set up a
+                          You&apos;re currently signed in with a social account. To
+                          enable password login, you&apos;ll need to set up a
                           password.
                         </p>
                         <Button
@@ -522,7 +492,7 @@ export default function Profile() {
                       </div>
                       {isGoogleConnected ? (
                         <Button
-                          onClick={() => handleUnlinkAccount("google.com")}
+                          onClick={() => handleUnlinkAccount("google")}
                           variant="outline"
                           size="sm"
                           className="border-red-500 text-red-500 hover:bg-red-500/10"
@@ -567,7 +537,7 @@ export default function Profile() {
                       </div>
                       {isFacebookConnected ? (
                         <Button
-                          onClick={() => handleUnlinkAccount("facebook.com")}
+                          onClick={() => handleUnlinkAccount("facebook")}
                           variant="outline"
                           size="sm"
                           className="border-red-500 text-red-500 hover:bg-red-500/10"

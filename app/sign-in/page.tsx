@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Navbar } from "@/components/navbar";
 import { EyeIcon, EyeOffIcon, CheckCircleIcon } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/contexts/simple-auth-context";
 import { SimpleCircleLoader } from "@/components/loading-screen";
 
 export default function SignIn() {
