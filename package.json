@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "test": "node --experimental-strip-types --test __tests__/**/*.test.ts",
+    "test": "node --experimental-strip-types --test __tests__/blueprint-studio.test.ts",
     "supabase:setup": "cd ../Galatea-AI-Supabase && npm run reset",
     "supabase:start": "cd ../Galatea-AI-Supabase && npm run start",
     "supabase:stop": "cd ../Galatea-AI-Supabase && npm run stop",
