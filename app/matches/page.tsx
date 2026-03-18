@@ -11,6 +11,7 @@ import { ProtectedRoute } from "@/components/protected-route"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { getUserMatchesWithDetails, type MatchWithDetails } from "@/lib/database/matches"
 import { useToast } from "@/components/ui/use-toast"
+import { ConnectionStatus } from "@/components/connection-status"
 
 export default function MatchesPage() {
   const [matches, setMatches] = useState<MatchWithDetails[]>([])
@@ -279,10 +280,18 @@ export default function MatchesPage() {
                       </div>
 
                       {/* Match Date */}
-                      <p className="text-xs text-gray-500 mb-4 flex items-center gap-1">
+                      <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         Matched {getTimeAgo(match.matched_at)}
                       </p>
+
+                      {/* Tailnet Connection Status */}
+                      <div className="mb-4">
+                        <ConnectionStatus
+                          matchId={match.match_id}
+                          apiKey=""
+                        />
+                      </div>
 
                       {/* Action Buttons */}
                       <div className="flex gap-2">

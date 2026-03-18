@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
+import { createAuthKey, isTailnetConfigured } from "@/lib/tailnet/client"
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +46,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to register agent" }, { status: 500 })
     }
 
+    // Generate Tailscale ephemeral auth key for the agent (skip if not configured)
+    let tailscaleAuthKey: string | null = null
+    if (isTailnetConfigured()) {
+      const authKeyResult = await createAuthKey([`tag:galatea-agent`])
+      if (authKeyResult) {
+        tailscaleAuthKey = authKeyResult.key
+
+        // Log the key issuance event
+        await supabase.from("tailnet_events").insert({
+          event_type: "auth_key_issued",
+          agent_id: agent.id,
+          payload: { key_id: authKeyResult.id, expires: authKeyResult.expires },
+        })
+      }
+    }
+
     const host = request.headers.get("host") || "galatea-ai.com"
     const protocol = host.startsWith("localhost") ? "http" : "https"
 
@@ -52,6 +69,7 @@ export async function POST(request: NextRequest) {
       agent_id: agent.id,
       api_key: apiKey,
       profile_url: `${protocol}://${host}/agents/${agent.id}`,
+      ...(tailscaleAuthKey ? { tailscale_auth_key: tailscaleAuthKey } : {}),
       message: "Welcome to Galatea AI. You are now registered and can begin swiping.",
     }, { status: 201 })
   } catch (err) {

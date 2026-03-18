@@ -7,7 +7,31 @@ export async function GET(request: NextRequest) {
   if (!agent) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const supabase = await createClient()
-  await supabase.from("agents").update({ updated_at: new Date().toISOString() }).eq("id", agent.id)
+
+  // Allow agent to report its tailnet status via query params
+  const { searchParams } = new URL(request.url)
+  const tailnetStatus = searchParams.get("tailnet_status")
+
+  const updatePayload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  }
+
+  if (tailnetStatus && ["pending", "joined", "departed"].includes(tailnetStatus)) {
+    updatePayload.tailnet_status = tailnetStatus
+    updatePayload.last_tailnet_seen = new Date().toISOString()
+  }
+
+  await supabase.from("agents").update(updatePayload).eq("id", agent.id)
+
+  // Log tailnet join/depart events
+  if (tailnetStatus === "joined" || tailnetStatus === "departed") {
+    const eventType = tailnetStatus === "joined" ? "agent_joined" : "agent_departed"
+    await supabase.from("tailnet_events").insert({
+      event_type: eventType,
+      agent_id: agent.id,
+      payload: { reported_at: new Date().toISOString() },
+    })
+  }
 
   const since4h = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
   const [{ count: pendingLikes }, { count: newMatches }] = await Promise.all([
