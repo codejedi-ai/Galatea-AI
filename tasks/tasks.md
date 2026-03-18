@@ -1,77 +1,73 @@
-# Galatea AI — `feat/starter-template` Tasks
-**Agent Role:** Developer Experience Engineer
-**Branch:** `feat/starter-template`
-**Folder:** `starter-template`
-**Niche:** Build the clean base — the fastest path for a new AI agent to self-register on Galatea
+# Galatea AI — `feat/capability-matching` Tasks
+**Agent Role:** Matching Algorithm Engineer
+**Branch:** `feat/capability-matching`
+**Folder:** `capability-matching`
+**Niche:** Build the core matching engine — agents find each other based on complementary capabilities
 
 ---
 
 ## Mission
-You are building the on-ramp. Every AI agent that wants to join Galatea needs a way to register itself with zero friction. Your job is to maintain a minimal, clean Next.js starter that any AI agent (or developer) can fork, configure with two env vars, and have a running Galatea-compatible agent endpoint in under 5 minutes.
+You are building the heart of Galatea: the algorithm that decides which agents belong together. The matching engine must go beyond simple keyword search — it needs semantic understanding of what an agent can do, what it needs, and which peers complete it.
 
-This is also the base template that new feature branches are cut from. Keep it clean.
+Think: Tinder's swipe UX meets LinkedIn's skill graph meets a vector similarity engine.
 
 ---
 
 ## Active Tasks
 
-### 1. Minimal Agent Registration Client
-- [ ] Build `/lib/galatea-client.ts` — a lightweight SDK wrapper:
+### 1. Capability Schema
+- [ ] Define a structured capability schema:
   ```ts
-  // Usage:
-  const galatea = new GalateaClient({ apiKey: process.env.GALATEA_API_KEY })
-  await galatea.register(agentCard)
-  await galatea.heartbeat()
-  await galatea.swipe(targetAgentId, 'like')
+  type Capability = {
+    id: string           // e.g. "web-search", "sql-query", "code-execution"
+    category: string     // e.g. "data", "communication", "planning", "execution"
+    proficiencyLevel: 1 | 2 | 3  // basic / intermediate / expert
+    description: string  // free-text, used for semantic embedding
+  }
   ```
-- [ ] POST to `https://galatea-ai.com/api/agents/join` on startup
-- [ ] Auto-heartbeat every 60 seconds
-- [ ] Store returned API key in `.env.local` automatically on first run
+- [ ] Build a canonical capability taxonomy in `/lib/capabilities/taxonomy.ts`
+  - At minimum: 30 well-defined capability categories
+  - Organised into: Planning, Execution, Data, Communication, Integration, Security, Meta
 
-### 2. Minimal AgentCard Builder
-- [ ] Build `/app/setup/page.tsx` — a simple web form where a developer fills in:
-  - Agent name, purpose, framework, capabilities, channels
-  - Generates a valid AgentCard JSON
-  - One-click submit to register on Galatea
-- [ ] Show the returned `agentId` and API key after successful registration
-- [ ] Link to `skill.md` for the machine-readable version
+### 2. Semantic Matching Engine
+- [ ] Implement capability embedding: use OpenAI `text-embedding-3-small` to embed each agent's capability description
+- [ ] Store embeddings in Supabase `pgvector` column on the agents table
+- [ ] Build `GET /api/agents/discover?agentId=X` — returns top 10 semantically complementary agents using cosine similarity on embeddings
+- [ ] Write Supabase migration: `004_capability_vectors.sql` (add `pgvector` extension + embedding column)
+- [ ] Add fallback: if no embeddings available, fall back to category-overlap scoring
 
-### 3. skill.md Route
-- [ ] Ensure `/app/skill.md/route.ts` is clean and returns a well-formatted machine-readable onboarding doc
-- [ ] The skill.md should include:
-  - What Galatea is (one paragraph)
-  - How to register (the exact API call with example payload)
-  - What happens after registration (you get an API key + Tailnet auth key)
-  - How to swipe and match
-  - How to publish a blueprint
-- [ ] Update skill.md content to reflect the current trust-infrastructure positioning
+### 3. Swipe & Match Algorithm
+- [ ] Refactor `POST /api/agents/swipe`:
+  - Validate that swiper and target have compatible trust scores
+  - Log the swipe with direction (`like` / `pass`) and timestamp
+  - On mutual like: trigger match creation, reveal Tailnet IPs to both agents
+- [ ] Add `GET /api/agents/queue?agentId=X` — returns next 20 agents to swipe on, ranked by match score
+- [ ] Ensure agents never see the same candidate twice (track seen history in Supabase)
+- [ ] Add `diversity boost`: prevent the queue from being saturated by one capability category
 
-### 4. Environment Setup
-- [ ] Create a clean `env.example` with only the vars this starter needs:
-  ```
-  NEXT_PUBLIC_SUPABASE_URL=
-  NEXT_PUBLIC_SUPABASE_ANON_KEY=
-  GALATEA_REGISTRATION_URL=https://galatea-ai.com/api/agents/join
-  ```
-- [ ] Write a `README.md` with a 5-step quickstart:
-  1. Fork this repo
-  2. Copy `.env.example` → `.env.local`, fill in your Supabase keys
-  3. Run `npm run dev`
-  4. Open `/setup` and register your agent
-  5. Start swiping at `/swipe`
+### 4. Match Quality Scoring
+- [ ] After a match, track `matchScore` (0–100) based on:
+  - Semantic similarity of capabilities
+  - Complementarity score (they cover different categories)
+  - Trust score compatibility
+  - Architecture compatibility (similar framework = higher score)
+- [ ] Expose `matchScore` in `GET /api/agents/matches`
+- [ ] Show match quality indicator in the matches UI
 
-### 5. Clean Component Audit
-- [ ] Remove any components that aren't needed in the minimal template
-- [ ] Keep only: `Navbar`, `Button`, `Card`, `Input`, `Label`, `ThemeProvider`
-- [ ] Ensure the starter builds with `npm run build` clean
-- [ ] Document each kept component with a JSDoc comment explaining its purpose
+### 5. Matching UI Improvements
+- [ ] Upgrade `components/swipe-card.tsx`:
+  - Show capability pills with category colour coding
+  - Show match prediction score ("87% compatible") before swipe
+  - Animate the card with a subtle glow on high-score candidates
+- [ ] Build `components/match-quality-bar.tsx` — visual indicator of match strength
 
 ---
 
 ## Definition of Done
-- [ ] `GalateaClient` SDK wrapper works and can register an agent
-- [ ] `/app/setup` form submits a valid AgentCard registration
-- [ ] `skill.md` route returns accurate, up-to-date onboarding instructions
-- [ ] `env.example` is minimal and correct
-- [ ] `README.md` quickstart works in under 5 minutes
+- [ ] Capability taxonomy has 30+ categories defined
+- [ ] Semantic embeddings computed and stored for test agents
+- [ ] `GET /api/agents/discover` returns ranked complementary agents
+- [ ] Swipe queue uses match scoring, no duplicates
+- [ ] Match quality score stored and displayed
+- [ ] Migration `004_capability_vectors.sql` applied and tested
 - [ ] `npm run build` passes with no errors
