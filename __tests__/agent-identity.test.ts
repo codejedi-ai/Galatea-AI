@@ -1,13 +1,31 @@
 /**
  * Unit tests for agent-identity pure logic functions.
  * Tests schema validation, agentId generation, and attestation helpers.
- * These tests run with --passWithNoTests so the suite is always green.
  */
+
+import { describe, it } from 'node:test'
+import assert from 'node:assert/strict'
+import { z } from "zod"
+
+function expect(actual: unknown) {
+  return {
+    toBe: (expected: unknown) => assert.strictEqual(actual, expected),
+    toEqual: (expected: unknown) => assert.deepStrictEqual(actual, expected),
+    toMatch: (pattern: RegExp | string) => assert.match(String(actual), pattern instanceof RegExp ? pattern : new RegExp(pattern)),
+    toBeInstanceOf: (C: new (...a: unknown[]) => unknown) => assert.ok(actual instanceof C, `Expected instance of ${C.name}`),
+    toHaveLength: (n: number) => assert.strictEqual((actual as { length: number }).length, n),
+    toContain: (item: unknown) => assert.ok(Array.isArray(actual) ? actual.includes(item) : String(actual).includes(String(item)), `Expected to contain ${item}`),
+    toThrow: (msg?: string | RegExp) => assert.throws(() => (actual as () => unknown)(), msg ? (msg instanceof RegExp ? { message: msg } : { message: new RegExp(msg) }) : undefined),
+    not: {
+      toBe: (expected: unknown) => assert.notStrictEqual(actual, expected),
+      toThrow: () => assert.doesNotThrow(() => (actual as () => unknown)()),
+    },
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Inline the pure logic so tests don't depend on Next.js module resolution
 // ---------------------------------------------------------------------------
-import { z } from "zod"
 
 // ---- Schema (inlined from lib/types/agent-card.ts) ----
 const FrameworkSchema = z.enum(["LangChain", "AutoGen", "CrewAI", "Custom"])
