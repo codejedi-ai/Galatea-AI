@@ -19,17 +19,17 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="#explore" className="text-gray-300 hover:text-white transition-colors text-sm">
-              Explore Agents
+            <Link href="/companions" className="text-gray-300 hover:text-white transition-colors text-sm">
+              Companions
+            </Link>
+            <Link href="/matches" className="text-gray-300 hover:text-white transition-colors text-sm">
+              Matches
             </Link>
             <Link href="#blueprint" className="text-gray-300 hover:text-white transition-colors text-sm">
               Blueprint Studio
             </Link>
             <Link href="#a2a" className="text-gray-300 hover:text-white transition-colors text-sm">
               A2A Protocol
-            </Link>
-            <Link href="#gallery" className="text-gray-300 hover:text-white transition-colors text-sm">
-              Architecture Gallery
             </Link>
           </div>
 
@@ -49,8 +49,8 @@ export function Navbar() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-2 space-y-4">
-            {["#explore", "#blueprint", "#a2a", "#gallery"].map((href, i) => {
-              const labels = ["Explore Agents", "Blueprint Studio", "A2A Protocol", "Architecture Gallery"]
+            {["/companions", "/matches", "#blueprint", "#a2a"].map((href, i) => {
+              const labels = ["Companions", "Matches", "Blueprint Studio", "A2A Protocol"]
               return (
                 <Link
                   key={href}
