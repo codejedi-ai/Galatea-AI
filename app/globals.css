@@ -280,7 +280,7 @@ button:hover:not(:disabled):not(.hover-rgb-border-only),
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
   body {
     @apply bg-background text-foreground;
