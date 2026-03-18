@@ -1,5 +1,9 @@
-import { describe, it } from 'node:test'
-import assert from 'node:assert/strict'
+/**
+ * Galatea AI — Capability Matching Tests
+ *
+ * Tests the taxonomy, scoring logic, and fallback matching.
+ * Uses Jest globals (describe/it/expect) — no node:test imports needed.
+ */
 
 import {
   ALL_CAPABILITIES,
@@ -23,45 +27,7 @@ import {
   type AgentProfile,
 } from '../lib/capabilities/match-score.ts'
 
-function expect(actual: unknown) {
-  return {
-    toBe: (expected: unknown) => assert.strictEqual(actual, expected),
-    toEqual: (expected: unknown) => assert.deepStrictEqual(actual, expected),
-    toMatch: (pattern: RegExp | string) =>
-      assert.match(String(actual), pattern instanceof RegExp ? pattern : new RegExp(pattern)),
-    toBeGreaterThan: (n: number) =>
-      assert.ok((actual as number) > n, `Expected ${actual} > ${n}`),
-    toBeLessThan: (n: number) =>
-      assert.ok((actual as number) < n, `Expected ${actual} < ${n}`),
-    toBeGreaterThanOrEqual: (n: number) =>
-      assert.ok((actual as number) >= n, `Expected ${actual} >= ${n}`),
-    toBeLessThanOrEqual: (n: number) =>
-      assert.ok((actual as number) <= n, `Expected ${actual} <= ${n}`),
-    toHaveLength: (n: number) =>
-      assert.strictEqual((actual as { length: number }).length, n),
-    toContain: (item: unknown) =>
-      assert.ok(
-        Array.isArray(actual)
-          ? actual.includes(item)
-          : String(actual).includes(String(item)),
-      ),
-    toBeInstanceOf: (C: new (...a: unknown[]) => unknown) =>
-      assert.ok(actual instanceof C),
-    toBeTruthy: () => assert.ok(actual),
-    toBeFalsy: () => assert.ok(!actual),
-    not: {
-      toBe: (expected: unknown) => assert.notStrictEqual(actual, expected),
-      toEqual: (expected: unknown) => {
-        try {
-          assert.deepStrictEqual(actual, expected)
-          throw new Error('Expected not equal')
-        } catch (e: unknown) {
-          if ((e as Error).message === 'Expected not equal') throw e
-        }
-      },
-    },
-  }
-}
+import assert from 'assert'
 
 // ─── Taxonomy tests ───────────────────────────────────────────────────────────
 
@@ -70,11 +36,15 @@ describe('taxonomy', () => {
     expect(ALL_CAPABILITIES.length).toBeGreaterThan(0)
   })
 
+  it('has 30 or more capabilities defined', () => {
+    expect(ALL_CAPABILITIES.length).toBeGreaterThanOrEqual(30)
+  })
+
   it('every capability has a non-empty id, category, description, and valid proficiency', () => {
     for (const cap of ALL_CAPABILITIES) {
-      assert.ok(cap.id.length > 0, `empty id: ${JSON.stringify(cap)}`)
-      assert.ok(cap.description.length > 0, `empty description for ${cap.id}`)
-      assert.ok([1, 2, 3].includes(cap.proficiencyLevel), `bad proficiency for ${cap.id}`)
+      expect(cap.id.length).toBeGreaterThan(0)
+      expect(cap.description.length).toBeGreaterThan(10)
+      expect([1, 2, 3]).toContain(cap.proficiencyLevel)
     }
   })
 
@@ -86,12 +56,12 @@ describe('taxonomy', () => {
 
   it('getCapabilityById returns undefined for an unknown id', () => {
     const cap = getCapabilityById('not-a-real-capability')
-    expect(cap).toBe(undefined)
+    expect(cap).toBeUndefined()
   })
 
   it('getCapabilitiesByCategory returns only capabilities of that category', () => {
     const planningCaps = getCapabilitiesByCategory('planning')
-    assert.ok(planningCaps.length > 0)
+    expect(planningCaps.length).toBeGreaterThan(0)
     for (const cap of planningCaps) {
       expect(cap.category).toBe('planning')
     }
@@ -131,7 +101,7 @@ describe('taxonomy', () => {
       'integration', 'security', 'meta',
     ]
     for (const cat of validCategories) {
-      assert.ok(CATEGORY_COLOURS[cat], `missing colour for ${cat}`)
+      expect(CATEGORY_COLOURS[cat]).toBeTruthy()
     }
   })
 
@@ -139,6 +109,14 @@ describe('taxonomy', () => {
     const ids = ALL_CAPABILITIES.map((c) => c.id)
     const uniqueIds = new Set(ids)
     expect(uniqueIds.size).toBe(ids.length)
+  })
+
+  it('covers all 7 required categories', () => {
+    const categories = new Set(ALL_CAPABILITIES.map((c) => c.category))
+    const expected: CapabilityCategory[] = ['planning', 'execution', 'data', 'communication', 'integration', 'security', 'meta']
+    for (const cat of expected) {
+      expect(categories.has(cat)).toBe(true)
+    }
   })
 })
 
@@ -195,8 +173,7 @@ describe('embeddings', () => {
     const b = ['code-execution', 'sentiment-analysis']
     const simAB = fallbackSimilarity(a, b)
     const simBA = fallbackSimilarity(b, a)
-    // Allow tiny floating point difference
-    assert.ok(Math.abs(simAB - simBA) < 1e-10, `asymmetric: ${simAB} vs ${simBA}`)
+    expect(Math.abs(simAB - simBA)).toBeLessThan(1e-10)
   })
 
   it('fallbackSimilarity: overlapping ids produce higher score than no overlap', () => {
@@ -242,11 +219,11 @@ describe('computeMatchScore', () => {
 
   it('returns an object with total, semantic, complementarity, trustCompatibility, architectureCompat', () => {
     const result = computeMatchScore(plannerAgent, executorAgent)
-    assert.ok('total' in result)
-    assert.ok('semantic' in result)
-    assert.ok('complementarity' in result)
-    assert.ok('trustCompatibility' in result)
-    assert.ok('architectureCompat' in result)
+    expect(result).toHaveProperty('total')
+    expect(result).toHaveProperty('semantic')
+    expect(result).toHaveProperty('complementarity')
+    expect(result).toHaveProperty('trustCompatibility')
+    expect(result).toHaveProperty('architectureCompat')
   })
 
   it('total score is in range 0–100', () => {
@@ -258,37 +235,33 @@ describe('computeMatchScore', () => {
   it('all sub-scores are in range 0–100', () => {
     const result = computeMatchScore(plannerAgent, executorAgent)
     for (const key of ['semantic', 'complementarity', 'trustCompatibility', 'architectureCompat'] as const) {
-      assert.ok(result[key] >= 0 && result[key] <= 100, `${key} out of range: ${result[key]}`)
+      expect(result[key]).toBeGreaterThanOrEqual(0)
+      expect(result[key]).toBeLessThanOrEqual(100)
     }
   })
 
   it('complementarity score is high when agents cover different categories', () => {
     const result = computeMatchScore(plannerAgent, executorAgent)
-    // planner covers planning, executor covers execution — should have high complementarity
     expect(result.complementarity).toBeGreaterThan(50)
   })
 
   it('complementarity score is 0 for identical agents', () => {
-    // Same capabilities → same categories → Jaccard distance = 0
     const result = computeMatchScore(plannerAgent, identicalAgent)
     expect(result.complementarity).toBe(0)
   })
 
   it('trust compatibility is high for agents with similar trust scores', () => {
     const result = computeMatchScore(plannerAgent, executorAgent)
-    // plannerAgent=80, executorAgent=75 → delta=5 → score=0.95 → 95
     expect(result.trustCompatibility).toBeGreaterThanOrEqual(90)
   })
 
   it('trust compatibility is lower when trust scores differ significantly', () => {
     const highTrustLow = computeMatchScore(plannerAgent, lowTrustAgent)
     const highTrustSimilar = computeMatchScore(plannerAgent, executorAgent)
-    // plannerAgent(80) vs lowTrustAgent(10) should be lower than plannerAgent(80) vs executorAgent(75)
     expect(highTrustLow.trustCompatibility).toBeLessThan(highTrustSimilar.trustCompatibility)
   })
 
   it('architectureCompat is 100 for same architecture', () => {
-    // plannerAgent and identicalAgent are both claude
     const result = computeMatchScore(plannerAgent, identicalAgent)
     expect(result.architectureCompat).toBe(100)
   })
@@ -305,7 +278,6 @@ describe('computeMatchScore', () => {
   })
 
   it('architectureCompat is 60 for different known families', () => {
-    // plannerAgent=claude, executorAgent=gpt → familyA != familyB → 0.6 → 60
     const result = computeMatchScore(plannerAgent, executorAgent)
     expect(result.architectureCompat).toBe(60)
   })
@@ -341,7 +313,6 @@ describe('computeMatchScore', () => {
       embeddingVector: [1, 0, 0],
     }
     const result = computeMatchScore(vecA, vecB)
-    // cosine([1,0,0],[1,0,0]) = 1 → semantic score = 100
     expect(result.semantic).toBe(100)
   })
 })
@@ -362,7 +333,6 @@ describe('applyDiversityBoost', () => {
   })
 
   it('defers candidates that exceed maxPerCategory', () => {
-    // 5 planning candidates with maxPerCategory=2 → first 2 in result, rest at end
     const planningCaps = PLANNING_CAPABILITIES.map((c) => c.id)
     const candidates: Candidate[] = planningCaps.map((id, i) => ({
       capabilities: [id],
@@ -372,12 +342,10 @@ describe('applyDiversityBoost', () => {
     const result = applyDiversityBoost(candidates, 2)
     expect(result.length).toBe(candidates.length)
 
-    // First 2 should be the ones that fit within the limit
-    const first2Cats = result.slice(0, 2).flatMap((c) =>
-      [...categoriesForIds(c.capabilities)],
-    )
-    for (const cat of first2Cats) {
-      expect(cat).toBe('planning')
+    const first2 = result.slice(0, 2)
+    for (const c of first2) {
+      const cats = categoriesForIds(c.capabilities)
+      expect(cats.has('planning')).toBe(true)
     }
   })
 
@@ -402,13 +370,12 @@ describe('applyDiversityBoost', () => {
 
   it('mixed categories: items within limit come before deferred', () => {
     const candidates: Candidate[] = [
-      { capabilities: ['task-decomposition'], score: 100 },   // planning #1 — kept
-      { capabilities: ['code-execution'], score: 99 },         // execution #1 — kept
-      { capabilities: ['goal-alignment'], score: 98 },         // planning #2 — deferred (maxPerCategory=1)
-      { capabilities: ['web-browsing'], score: 97 },           // execution #2 — deferred
+      { capabilities: ['task-decomposition'], score: 100 },
+      { capabilities: ['code-execution'], score: 99 },
+      { capabilities: ['goal-alignment'], score: 98 },
+      { capabilities: ['web-browsing'], score: 97 },
     ]
     const result = applyDiversityBoost(candidates, 1)
-    // First 2 items should be one planning and one execution (no duplicates in first half)
     const firstTwo = result.slice(0, 2)
     const catsInFirstTwo = new Set(firstTwo.flatMap((c) => [...categoriesForIds(c.capabilities)]))
     expect(catsInFirstTwo.has('planning')).toBe(true)
