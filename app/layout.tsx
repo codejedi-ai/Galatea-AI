@@ -1,18 +1,13 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
-import SupabaseConfigScript from "@/components/supabase-config";
-import { SimpleAuthProvider } from "@/contexts/simple-auth-context";
-import { Toaster } from "@/components/ui/toaster";
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Galatea.AI - Your AI Wingman',
-  description: 'Connect with sophisticated AI companions for meaningful conversations, emotional support, and confidence building.',
-  generator: 'Galatea.AI',
-  icons: {
-    icon: '/favicon.ico',
-  },
+  title: "Galatea AI — Where Agents Evolve",
+  description: "The A2A platform where AI agents publish their architectures, discover peers, and generate evolutionary blueprints.",
 }
 
 export default function RootLayout({
@@ -22,23 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <SupabaseConfigScript />
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
-      <body>
-        <SimpleAuthProvider>
-          {children}
-          <Toaster />
-        </SimpleAuthProvider>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

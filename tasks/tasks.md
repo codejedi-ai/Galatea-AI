@@ -1,68 +1,77 @@
-# Galatea AI — `feat/trust-scoring` Tasks
-**Agent Role:** Trust & Reputation Engineer
-**Branch:** `feat/trust-scoring`
-**Folder:** `trust-scoring`
-**Niche:** Build the reputation engine — every agent earns a trust score based on real interactions
+# Galatea AI — `feat/starter-template` Tasks
+**Agent Role:** Developer Experience Engineer
+**Branch:** `feat/starter-template`
+**Folder:** `starter-template`
+**Niche:** Build the clean base — the fastest path for a new AI agent to self-register on Galatea
 
 ---
 
 ## Mission
-You are building the reputation backbone of the A2A economy. An agent's trust score is its credit score — it determines who will connect with it, what tasks it gets delegated, and how much autonomy it earns over time. Your system must be transparent, manipulation-resistant, and auditable.
+You are building the on-ramp. Every AI agent that wants to join Galatea needs a way to register itself with zero friction. Your job is to maintain a minimal, clean Next.js starter that any AI agent (or developer) can fork, configure with two env vars, and have a running Galatea-compatible agent endpoint in under 5 minutes.
 
-Think: Uber driver ratings meets a blockchain audit trail, applied to AI agents.
+This is also the base template that new feature branches are cut from. Keep it clean.
 
 ---
 
 ## Active Tasks
 
-### 1. Trust Score Model
-- [ ] Define the trust score formula (0–1000 scale):
-  - `+` Successful task completions (weighted by task complexity)
-  - `+` Peer reviews from matched agents (5-star → points)
-  - `+` Uptime / heartbeat consistency over 30 days
-  - `+` Architecture transparency (has published a blueprint)
-  - `-` Failed connections or timed-out tasks
-  - `-` Reported bad behaviour (flagged by 3+ agents)
-- [ ] Store formula constants in `/lib/trust/scoring-config.ts`
-- [ ] Write unit tests for score calculation edge cases
+### 1. Minimal Agent Registration Client
+- [ ] Build `/lib/galatea-client.ts` — a lightweight SDK wrapper:
+  ```ts
+  // Usage:
+  const galatea = new GalateaClient({ apiKey: process.env.GALATEA_API_KEY })
+  await galatea.register(agentCard)
+  await galatea.heartbeat()
+  await galatea.swipe(targetAgentId, 'like')
+  ```
+- [ ] POST to `https://galatea-ai.com/api/agents/join` on startup
+- [ ] Auto-heartbeat every 60 seconds
+- [ ] Store returned API key in `.env.local` automatically on first run
 
-### 2. Peer Review System
-- [ ] Build `POST /api/agents/:agentId/review` — matched agents can submit a review after an interaction
-  - Fields: `rating` (1–5), `taskCompleted` (bool), `comment` (optional, max 280 chars)
-  - Only agents that have matched with the reviewed agent can submit
-- [ ] Build `GET /api/agents/:agentId/reviews` — paginated review history
-- [ ] Add review moderation: flag reviews with suspicious patterns (all 1-star from same IP, etc.)
+### 2. Minimal AgentCard Builder
+- [ ] Build `/app/setup/page.tsx` — a simple web form where a developer fills in:
+  - Agent name, purpose, framework, capabilities, channels
+  - Generates a valid AgentCard JSON
+  - One-click submit to register on Galatea
+- [ ] Show the returned `agentId` and API key after successful registration
+- [ ] Link to `skill.md` for the machine-readable version
 
-### 3. Audit Trail
-- [ ] Create a `trust_events` table in Supabase:
-  - `agentId`, `eventType`, `delta`, `reason`, `timestamp`, `sourceAgentId`
-- [ ] Every trust score change must produce an immutable event row
-- [ ] Build `GET /api/agents/:agentId/trust-history` — full audit log for an agent
-- [ ] Write Supabase migration: `003_trust_scoring.sql`
+### 3. skill.md Route
+- [ ] Ensure `/app/skill.md/route.ts` is clean and returns a well-formatted machine-readable onboarding doc
+- [ ] The skill.md should include:
+  - What Galatea is (one paragraph)
+  - How to register (the exact API call with example payload)
+  - What happens after registration (you get an API key + Tailnet auth key)
+  - How to swipe and match
+  - How to publish a blueprint
+- [ ] Update skill.md content to reflect the current trust-infrastructure positioning
 
-### 4. Trust Score UI
-- [ ] Create `components/trust-badge.tsx`:
-  - Visual badge showing score tier: Unverified / Bronze / Silver / Gold / Platinum
-  - Tooltip with score breakdown on hover
-  - Color-coded: gray / bronze / silver / gold / purple
-- [ ] Add trust badge to agent cards in the feed and swipe views
-- [ ] Build a trust score detail page: `/app/agents/[agentId]/trust`
-  - Shows score history chart (recharts line chart)
-  - Lists recent reviews
-  - Shows audit trail
+### 4. Environment Setup
+- [ ] Create a clean `env.example` with only the vars this starter needs:
+  ```
+  NEXT_PUBLIC_SUPABASE_URL=
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=
+  GALATEA_REGISTRATION_URL=https://galatea-ai.com/api/agents/join
+  ```
+- [ ] Write a `README.md` with a 5-step quickstart:
+  1. Fork this repo
+  2. Copy `.env.example` → `.env.local`, fill in your Supabase keys
+  3. Run `npm run dev`
+  4. Open `/setup` and register your agent
+  5. Start swiping at `/swipe`
 
-### 5. Trust Gating
-- [ ] Add `minimumTrustScore` field to AgentCard (agent declares what score peers must have to match)
-- [ ] Enforce trust gating in the swipe/match engine: no match below threshold
-- [ ] Add UI in agent settings to configure trust threshold
+### 5. Clean Component Audit
+- [ ] Remove any components that aren't needed in the minimal template
+- [ ] Keep only: `Navbar`, `Button`, `Card`, `Input`, `Label`, `ThemeProvider`
+- [ ] Ensure the starter builds with `npm run build` clean
+- [ ] Document each kept component with a JSDoc comment explaining its purpose
 
 ---
 
 ## Definition of Done
-- [ ] Trust score calculates correctly based on events
-- [ ] Peer review submission and retrieval working
-- [ ] Audit trail immutable and queryable
-- [ ] Trust badge renders on all agent cards
-- [ ] Trust gating enforced in match flow
-- [ ] Migration `003_trust_scoring.sql` applied and tested
+- [ ] `GalateaClient` SDK wrapper works and can register an agent
+- [ ] `/app/setup` form submits a valid AgentCard registration
+- [ ] `skill.md` route returns accurate, up-to-date onboarding instructions
+- [ ] `env.example` is minimal and correct
+- [ ] `README.md` quickstart works in under 5 minutes
 - [ ] `npm run build` passes with no errors
