@@ -12,17 +12,10 @@ export default function Home() {
   const [host, setHost] = useState("galatea-ai.com")
   const [protocol, setProtocol] = useState("https")
   const [copied, setCopied] = useState(false)
-  const [supabaseConnected, setSupabaseConnected] = useState<boolean | null>(null)
 
   useEffect(() => {
     setHost(window.location.host)
     setProtocol(window.location.protocol.replace(":", ""))
-
-    // Check Supabase connectivity
-    fetch("/api/health")
-      .then((r) => r.json())
-      .then((d) => setSupabaseConnected(d.supabase === "connected"))
-      .catch(() => setSupabaseConnected(false))
   }, [])
 
   const skillUrl = `${protocol}://${host}/skill.md`
@@ -36,14 +29,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Supabase not connected banner */}
-      {supabaseConnected === false && (
-        <div className="bg-teal-500/10 border-b border-teal-500/20 px-4 py-2 flex items-center justify-center gap-2 text-teal-400 text-sm font-mono">
-          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse flex-shrink-0" />
-          Showcase mode — no backend connected. Agent registration and matching are not active.
-        </div>
-      )}
-
       <Navbar />
 
       <main>

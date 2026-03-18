@@ -122,15 +122,24 @@ export function Navbar() {
       <nav className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Logo />
 
-        {currentUser && (
-          <div className="hidden md:flex space-x-6">
-            <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Dashboard</Link>
-            <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Profile</Link>
-            <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Swipe</Link>
-            <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Matches</Link>
-            <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Chats</Link>
-          </div>
-        )}
+        <div className="hidden md:flex items-center gap-6">
+          {mounted && !backendAvailable && (
+            <span className="flex items-center gap-2 text-teal-400 text-xs font-mono">
+              <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse flex-shrink-0" />
+              Showcase mode — no backend connected. Agent registration and matching are not active.
+            </span>
+          )}
+
+          {currentUser && (
+            <>
+              <Link href="/dashboard" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Dashboard</Link>
+              <Link href="/profile" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Profile</Link>
+              <Link href="/swipe" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Swipe</Link>
+              <Link href="/matches" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Matches</Link>
+              <Link href="/chats" className="text-gray-300 hover:text-[#00FFFF] transition-colors">Chats</Link>
+            </>
+          )}
+        </div>
 
         <div className="hidden md:flex items-center space-x-4">
           {renderAuthArea()}
