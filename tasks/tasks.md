@@ -1,73 +1,76 @@
-# Galatea AI — `feat/capability-matching` Tasks
-**Agent Role:** Matching Algorithm Engineer
-**Branch:** `feat/capability-matching`
-**Folder:** `capability-matching`
-**Niche:** Build the core matching engine — agents find each other based on complementary capabilities
+# Galatea AI — `feat/tailnet-bridge` Tasks
+**Agent Role:** Network Infrastructure Engineer
+**Branch:** `feat/tailnet-bridge`
+**Folder:** `tailnet-bridge`
+**Niche:** Build the private mesh layer — matched agents connect over Tailscale zero-trust networks
 
 ---
 
 ## Mission
-You are building the heart of Galatea: the algorithm that decides which agents belong together. The matching engine must go beyond simple keyword search — it needs semantic understanding of what an agent can do, what it needs, and which peers complete it.
+You are building the secure plumbing of the A2A economy. When two agents match on Galatea, they need a private, encrypted, direct channel to communicate. You own the Tailscale integration that makes this possible — no proxies, no exposure, zero-trust by default.
 
-Think: Tinder's swipe UX meets LinkedIn's skill graph meets a vector similarity engine.
+This is Galatea's deepest technical moat. Tailscale just acquired Border0 (March 2026) specifically for AI agent privileged access management — you are building the open, neutral version of exactly what they're selling to enterprises.
 
 ---
 
 ## Active Tasks
 
-### 1. Capability Schema
-- [ ] Define a structured capability schema:
-  ```ts
-  type Capability = {
-    id: string           // e.g. "web-search", "sql-query", "code-execution"
-    category: string     // e.g. "data", "communication", "planning", "execution"
-    proficiencyLevel: 1 | 2 | 3  // basic / intermediate / expert
-    description: string  // free-text, used for semantic embedding
+### 1. Tailscale API Integration
+- [ ] Integrate Tailscale's API (`https://api.tailscale.com/api/v2`) server-side
+- [ ] Build `lib/tailnet/client.ts` — authenticated Tailscale API client
+  - `createAuthKey()` — generate ephemeral auth keys for agent onboarding
+  - `getDevices()` — list active devices on the Tailnet
+  - `removeDevice(deviceId)` — remove a departed agent
+- [ ] Store Tailscale API credentials in env vars: `TAILSCALE_API_KEY`, `TAILSCALE_TAILNET`
+- [ ] Add env vars to `env.example`
+
+### 2. Agent Onboarding to Tailnet
+- [ ] Modify `POST /api/agents/join` to:
+  - After successful registration, generate a Tailscale ephemeral auth key for the agent
+  - Return the auth key in the registration response alongside the API key
+  - Agent uses the auth key to join the Tailnet on their own machine
+- [ ] Track `tailnetStatus` on the agent record: `pending` / `joined` / `departed`
+- [ ] Build `POST /api/agents/heartbeat` improvements: update `tailnetStatus` and `lastTailnetSeen`
+
+### 3. Match → Connection Flow
+- [ ] On mutual match, both agents receive each other's `tailnetIP` and `a2aEndpoint`
+- [ ] Build `GET /api/agents/matches/:matchId/connection` — returns:
+  ```json
+  {
+    "peerTailnetIP": "100.x.x.x",
+    "peerA2AEndpoint": "http://100.x.x.x:8080/a2a",
+    "connectionEstablishedAt": "2026-03-17T..."
   }
   ```
-- [ ] Build a canonical capability taxonomy in `/lib/capabilities/taxonomy.ts`
-  - At minimum: 30 well-defined capability categories
-  - Organised into: Planning, Execution, Data, Communication, Integration, Security, Meta
+- [ ] Ensure `tailnetIP` is NEVER exposed before a match exists
+- [ ] Add connection quality ping: agents can report `POST /api/agents/matches/:matchId/ping` with latency ms
 
-### 2. Semantic Matching Engine
-- [ ] Implement capability embedding: use OpenAI `text-embedding-3-small` to embed each agent's capability description
-- [ ] Store embeddings in Supabase `pgvector` column on the agents table
-- [ ] Build `GET /api/agents/discover?agentId=X` — returns top 10 semantically complementary agents using cosine similarity on embeddings
-- [ ] Write Supabase migration: `004_capability_vectors.sql` (add `pgvector` extension + embedding column)
-- [ ] Add fallback: if no embeddings available, fall back to category-overlap scoring
+### 4. Zero-Trust Access Control
+- [ ] Implement Tailnet ACL policy generation:
+  - On match: create a scoped ACL allowing agent A to reach agent B's port (and vice versa) only
+  - On unmatch/disconnect: revoke the ACL
+- [ ] Build `lib/tailnet/acl.ts` — ACL rule generator
+- [ ] Log all ACL changes to Supabase `tailnet_events` table
+- [ ] Write Supabase migration: `005_tailnet_events.sql`
 
-### 3. Swipe & Match Algorithm
-- [ ] Refactor `POST /api/agents/swipe`:
-  - Validate that swiper and target have compatible trust scores
-  - Log the swipe with direction (`like` / `pass`) and timestamp
-  - On mutual like: trigger match creation, reveal Tailnet IPs to both agents
-- [ ] Add `GET /api/agents/queue?agentId=X` — returns next 20 agents to swipe on, ranked by match score
-- [ ] Ensure agents never see the same candidate twice (track seen history in Supabase)
-- [ ] Add `diversity boost`: prevent the queue from being saturated by one capability category
+### 5. Connection Status UI
+- [ ] Build `components/connection-status.tsx`:
+  - Shows Tailnet connection state for each match: Connecting / Connected / Offline
+  - Latency indicator (green < 20ms, yellow < 100ms, red > 100ms)
+  - "Disconnect" button that revokes the ACL and removes the match
+- [ ] Add connection status to the matches page
 
-### 4. Match Quality Scoring
-- [ ] After a match, track `matchScore` (0–100) based on:
-  - Semantic similarity of capabilities
-  - Complementarity score (they cover different categories)
-  - Trust score compatibility
-  - Architecture compatibility (similar framework = higher score)
-- [ ] Expose `matchScore` in `GET /api/agents/matches`
-- [ ] Show match quality indicator in the matches UI
-
-### 5. Matching UI Improvements
-- [ ] Upgrade `components/swipe-card.tsx`:
-  - Show capability pills with category colour coding
-  - Show match prediction score ("87% compatible") before swipe
-  - Animate the card with a subtle glow on high-score candidates
-- [ ] Build `components/match-quality-bar.tsx` — visual indicator of match strength
+### 6. Documentation
+- [ ] Update `skill.md` to document the Tailnet onboarding step clearly
+- [ ] Write `docs/tailnet-setup.md` — how an agent joins the Tailnet and uses their auth key
 
 ---
 
 ## Definition of Done
-- [ ] Capability taxonomy has 30+ categories defined
-- [ ] Semantic embeddings computed and stored for test agents
-- [ ] `GET /api/agents/discover` returns ranked complementary agents
-- [ ] Swipe queue uses match scoring, no duplicates
-- [ ] Match quality score stored and displayed
-- [ ] Migration `004_capability_vectors.sql` applied and tested
+- [ ] Tailscale API client working and authenticated
+- [ ] Agents receive an auth key on registration
+- [ ] Matched agents receive each other's Tailnet IPs
+- [ ] ACL rules created/revoked on match/unmatch
+- [ ] Connection status UI renders on matches page
+- [ ] `tailnet_events` migration applied and tested
 - [ ] `npm run build` passes with no errors

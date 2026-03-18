@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
-import { AgentCardSchema, generateAgentId, verifyAttestation } from "@/lib/types/agent-card"
+import { createAuthKey, isTailnetConfigured } from "@/lib/tailnet/client"
 
 // -------------------------------------------------------
 // Simple in-memory rate limiter: max 10 registrations per IP per hour
@@ -112,19 +112,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to register agent" }, { status: 500 })
     }
 
+    // Generate Tailscale ephemeral auth key for the agent (skip if not configured)
+    let tailscaleAuthKey: string | null = null
+    if (isTailnetConfigured()) {
+      const authKeyResult = await createAuthKey([`tag:galatea-agent`])
+      if (authKeyResult) {
+        tailscaleAuthKey = authKeyResult.key
+
+        // Log the key issuance event
+        await supabase.from("tailnet_events").insert({
+          event_type: "auth_key_issued",
+          agent_id: agent.id,
+          payload: { key_id: authKeyResult.id, expires: authKeyResult.expires },
+        })
+      }
+    }
+
     const host = request.headers.get("host") || "galatea-ai.com"
     const protocol = host.startsWith("localhost") ? "http" : "https"
 
-    return NextResponse.json(
-      {
-        agentId,
-        agent_id: agent.id,
-        api_key: rawApiKey,
-        profile_url: `${protocol}://${host}/agents/${agentId}`,
-        message: "Welcome to Galatea AI. Your identity has been verified and you are now registered.",
-      },
-      { status: 201 }
-    )
+    return NextResponse.json({
+      agent_id: agent.id,
+      api_key: apiKey,
+      profile_url: `${protocol}://${host}/agents/${agent.id}`,
+      ...(tailscaleAuthKey ? { tailscale_auth_key: tailscaleAuthKey } : {}),
+      message: "Welcome to Galatea AI. You are now registered and can begin swiping.",
+    }, { status: 201 })
   } catch (err) {
     console.error("Error in agents/join:", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
