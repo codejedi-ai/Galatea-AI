@@ -2,10 +2,10 @@
 
 import type React from "react";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/simple-auth-context"
-import { LoadingSpinner } from "@/components/loading-spinner"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
+import { CircleLoader } from "@/components/loading-screen";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { currentUser, loading } = useAuth();
@@ -22,8 +22,8 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser, loading, router]);
 
-  if (loading) {
-    return <LoadingSpinner size="medium" fullScreen />
+  if (loading || showLoader) {
+    return <CircleLoader />;
   }
 
   return currentUser ? <>{children}</> : null;

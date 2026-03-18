@@ -1,25 +1,98 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import {
+  type User,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+  updateProfile,
+} from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 interface AuthContextType {
   currentUser: User | null
   loading: boolean
+  signup: (email: string, password: string, displayName: string) => Promise<User>
+  login: (email: string, password: string) => Promise<User>
   logout: () => Promise<void>
+  loginWithGoogle: () => Promise<User>
+  loginWithFacebook: () => Promise<User>
+  linkWithGoogle: () => Promise<void>
+  linkWithFacebook: () => Promise<void>
+  unlinkProvider: (providerId: string) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType>({
-  currentUser: null,
-  loading: true,
-  logout: async () => {},
-})
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
+
+  async function signup(email: string, password: string, displayName: string) {
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password)
+      await updateProfile(user, { displayName })
+      return user
+    } catch (error: any) {
+      console.error("Error in signup:", error)
+      throw new Error(error.message || "Failed to create account")
+    }
+  }
+
+  async function login(email: string, password: string) {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password)
+      return result.user
+    } catch (error: any) {
+      console.error("Error in login:", error)
+      throw new Error(error.message || "Failed to sign in")
+    }
+  }
+
+  async function logout() {
+    try {
+      await signOut(auth)
+    } catch (error: any) {
+      console.error("Error in logout:", error)
+      throw new Error(error.message || "Failed to sign out")
+    }
+  }
+
+  async function loginWithGoogle() {
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      return result.user
+    } catch (error: any) {
+      console.error("Error in Google login:", error)
+      throw new Error(error.message || "Failed to sign in with Google")
+    }
+  }
+
+  async function loginWithFacebook() {
+    try {
+      const provider = new FacebookAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      return result.user
+    } catch (error: any) {
+      console.error("Error in Facebook login:", error)
+      throw new Error(error.message || "Failed to sign in with Facebook")
+    }
+  }
 
   async function linkWithGoogle() {
     if (!currentUser) throw new Error("No user logged in")
@@ -60,69 +133,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    setMounted(true)
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user)
+      setLoading(false)
+    })
+
+    return unsubscribe
   }, [])
 
-  useEffect(() => {
-    // Only start auth operations after component is mounted
-    if (!mounted) return
-
-    let supabase: any = null;
-    
-    try {
-      supabase = createClient()
-    } catch (error) {
-      console.error("Failed to create Supabase client:", error)
-      setLoading(false)
-      return
-    }
-
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        setCurrentUser(session?.user ?? null)
-        setLoading(false)
-      } catch (error) {
-        console.error("Error getting initial session:", error)
-        setLoading(false)
-      }
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: any, session: any) => {
-        setCurrentUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [mounted])
-
-  const logout = async () => {
-    try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      setCurrentUser(null)
-    } catch (error) {
-      console.error("Error during logout:", error)
-    }
+  const value: AuthContextType = {
+    currentUser,
+    loading,
+    signup,
+    login,
+    logout,
+    loginWithGoogle,
+    loginWithFacebook,
+    linkWithGoogle,
+    linkWithFacebook,
+    unlinkProvider,
   }
 
-  return (
-    <AuthContext.Provider value={{ currentUser, loading, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
-
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
