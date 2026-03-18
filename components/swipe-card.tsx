@@ -6,21 +6,65 @@ import { useState } from "react"
 import Image from "next/image"
 import { Info, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { AICompanion } from "@/lib/companions"
+import { getCapabilityById, CATEGORY_COLOURS } from "@/lib/capabilities/taxonomy"
+
+/**
+ * A swipeable companion profile. Uses camelCase fields to match the shape
+ * returned by /api/init-swiping and similar routes.
+ */
+export interface SwipeableCompanion {
+  name: string
+  age?: number
+  bio: string
+  personality?: string | string[]
+  interests: string[]
+  imageUrl?: string
+  compatibilityScore?: number
+  personalityTraits?: string[]
+  communicationStyle?: string
+  learningCapacity?: string
+  favoriteTopics?: string[]
+  relationshipGoals?: string[]
+  backstory?: string
+}
 
 interface SwipeCardProps {
-  companion: AICompanion
+  companion: SwipeableCompanion
   onSwipeLeft: () => void
   onSwipeRight: () => void
   onSuperLike: () => void
   style?: React.CSSProperties
+  /** Pre-computed match score 0–100; shown as "87% compatible" badge */
+  matchScore?: number
+  /** Agent-level capability ids to render as pills */
+  capabilityIds?: string[]
 }
 
-export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, style }: SwipeCardProps) {
+export function SwipeCard({
+  companion,
+  onSwipeLeft,
+  onSwipeRight,
+  onSuperLike,
+  style,
+  matchScore,
+  capabilityIds = [],
+}: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false)
 
+  // Derive display score: prefer prop, fall back to companion field
+  const displayScore = matchScore ?? companion.compatibilityScore
+
+  // High-score glow threshold
+  const isHighScore = displayScore !== undefined && displayScore >= 80
+
   return (
-    <div className="w-full h-full bg-gray-900 rounded-2xl overflow-hidden shadow-2xl" style={style}>
+    <div
+      className={cn(
+        "w-full h-full bg-gray-900 rounded-2xl overflow-hidden shadow-2xl transition-shadow duration-500",
+        isHighScore && "shadow-teal-500/40 shadow-[0_0_32px_4px]",
+      )}
+      style={style}
+    >
       <div className="relative w-full h-full">
         <Image
           src={companion.imageUrl || "/placeholder.svg?height=600&width=400"}
@@ -47,25 +91,69 @@ export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, s
                 {companion.name}
                 {companion.age && <span className="text-teal-400">, {companion.age}</span>}
               </h2>
-              <p className="text-gray-300 text-lg">{companion.personality}</p>
+              <p className="text-gray-300 text-lg">
+                {Array.isArray(companion.personality)
+                  ? companion.personality.join(", ")
+                  : companion.personality}
+              </p>
             </div>
-            {companion.compatibilityScore && (
-              <div className="bg-teal-500/20 backdrop-blur-sm rounded-full px-3 py-1 border border-teal-500/30">
-                <span className="text-teal-400 font-bold text-sm">{companion.compatibilityScore}% match</span>
+            {displayScore !== undefined && (
+              <div
+                className={cn(
+                  "backdrop-blur-sm rounded-full px-3 py-1 border",
+                  isHighScore
+                    ? "bg-teal-500/30 border-teal-400/60"
+                    : "bg-teal-500/20 border-teal-500/30",
+                )}
+              >
+                <span className="text-teal-400 font-bold text-sm">{displayScore}% match</span>
               </div>
             )}
           </div>
 
+          {/* Capability pills — colour-coded by category */}
+          {capabilityIds.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {capabilityIds
+                .slice(0, showDetails ? capabilityIds.length : 5)
+                .map((id) => {
+                  const cap = getCapabilityById(id)
+                  const colourClass = cap
+                    ? CATEGORY_COLOURS[cap.category]
+                    : "bg-white/20 text-white border-white/30"
+                  return (
+                    <span
+                      key={id}
+                      className={cn(
+                        "text-xs px-2 py-0.5 rounded-full border backdrop-blur-sm",
+                        colourClass,
+                      )}
+                      title={cap?.description}
+                    >
+                      {cap ? cap.id : id}
+                    </span>
+                  )
+                })}
+              {!showDetails && capabilityIds.length > 5 && (
+                <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-2 py-0.5 rounded-full border border-white/30">
+                  +{capabilityIds.length - 5} more
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Interests */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {companion.interests.slice(0, showDetails ? companion.interests.length : 4).map((interest, index) => (
-              <span
-                key={index}
-                className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/30"
-              >
-                {interest}
-              </span>
-            ))}
+            {companion.interests
+              .slice(0, showDetails ? companion.interests.length : 4)
+              .map((interest, index) => (
+                <span
+                  key={index}
+                  className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/30"
+                >
+                  {interest}
+                </span>
+              ))}
             {!showDetails && companion.interests.length > 4 && (
               <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full border border-white/30">
                 +{companion.interests.length - 4} more
@@ -75,7 +163,9 @@ export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, s
 
           {/* Bio */}
           <p className="text-white mb-4 leading-relaxed">
-            {showDetails ? companion.bio : `${companion.bio.slice(0, 120)}${companion.bio.length > 120 ? "..." : ""}`}
+            {showDetails
+              ? companion.bio
+              : `${companion.bio.slice(0, 120)}${companion.bio.length > 120 ? "..." : ""}`}
           </p>
 
           {/* Detailed information (shown when expanded) */}
