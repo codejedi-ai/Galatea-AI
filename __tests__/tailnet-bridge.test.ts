@@ -31,16 +31,16 @@ function expect(actual: unknown) {
 function generateMatchACLRules(ctx) {
   const port = ctx.a2aPort != null ? ctx.a2aPort : 8080
   return [
-    { action: "accept", src: [ctx.agentAIp], dst: [`${ctx.agentBIp}:${port}`] },
-    { action: "accept", src: [ctx.agentBIp], dst: [`${ctx.agentAIp}:${port}`] },
+    { action: "accept", src: [ctx.agentAIp], dst: [ctx.agentBIp + ":" + port] },
+    { action: "accept", src: [ctx.agentBIp], dst: [ctx.agentAIp + ":" + port] },
   ]
 }
 
 function revokeMatchACLRules(existingRules, ctx) {
-  return existingRules.filter((rule) => {
-    const involvesBothAgents =
-      (rule.src.includes(ctx.agentAIp) || rule.src.includes(ctx.agentBIp)) &&
-      rule.dst.some((d) => d.startsWith(ctx.agentAIp) || d.startsWith(ctx.agentBIp))
+  return existingRules.filter(function(rule) {
+    var involvesBothAgents =
+      (rule.src.indexOf(ctx.agentAIp) !== -1 || rule.src.indexOf(ctx.agentBIp) !== -1) &&
+      rule.dst.some(function(d) { return d.indexOf(ctx.agentAIp) === 0 || d.indexOf(ctx.agentBIp) === 0 })
     return !involvesBothAgents
   })
 }
@@ -48,17 +48,16 @@ function revokeMatchACLRules(existingRules, ctx) {
 // ---- Auth Key Format Validation ----
 
 function isValidTailscaleAuthKeyFormat(key) {
-  return typeof key === "string" && key.startsWith("tskey-auth-") && key.length > 20
+  return typeof key === "string" && key.indexOf("tskey-auth-") === 0 && key.length > 20
 }
 
 function isValidGalateaApiKeyFormat(apiKey) {
-  // gai_ prefix + 32 hex chars (total 36)
-  return typeof apiKey === "string" && apiKey.startsWith("gai_") && apiKey.length === 36
+  return typeof apiKey === "string" && apiKey.indexOf("gai_") === 0 && apiKey.length === 36
 }
 
 // ---- Event Logging Logic ----
 
-const VALID_EVENT_TYPES = [
+var VALID_EVENT_TYPES = [
   "auth_key_issued",
   "agent_joined",
   "agent_departed",
@@ -69,14 +68,14 @@ const VALID_EVENT_TYPES = [
 ]
 
 function isValidEventType(type) {
-  return VALID_EVENT_TYPES.includes(type)
+  return VALID_EVENT_TYPES.indexOf(type) !== -1
 }
 
 function buildTailnetEvent(eventType, agentId, payload) {
   return {
     event_type: eventType,
     agent_id: agentId,
-    payload,
+    payload: payload,
     created_at: new Date().toISOString(),
   }
 }
@@ -89,105 +88,105 @@ function getLatencyColor(ms) {
 
 // ---- Test Suites ----
 
-describe("ACL Rule Generation", () => {
-  const ctx = {
+describe("ACL Rule Generation", function() {
+  var ctx = {
     matchId: "match-abc-123",
     agentAIp: "100.64.1.1",
     agentBIp: "100.64.1.2",
   }
 
-  test("generates exactly 2 rules for a matched pair", () => {
-    const rules = generateMatchACLRules(ctx)
+  test("generates exactly 2 rules for a matched pair", function() {
+    var rules = generateMatchACLRules(ctx)
     expect(rules).toHaveLength(2)
   })
 
-  test("rules use default A2A port 8080", () => {
-    const rules = generateMatchACLRules(ctx)
+  test("rules use default A2A port 8080", function() {
+    var rules = generateMatchACLRules(ctx)
     expect(rules[0].dst[0]).toBe("100.64.1.2:8080")
     expect(rules[1].dst[0]).toBe("100.64.1.1:8080")
   })
 
-  test("rules use custom port when specified", () => {
-    const rules = generateMatchACLRules({ ...ctx, a2aPort: 9090 })
+  test("rules use custom port when specified", function() {
+    var rules = generateMatchACLRules(Object.assign({}, ctx, { a2aPort: 9090 }))
     expect(rules[0].dst[0]).toBe("100.64.1.2:9090")
     expect(rules[1].dst[0]).toBe("100.64.1.1:9090")
   })
 
-  test("all rules have action: accept", () => {
-    const rules = generateMatchACLRules(ctx)
-    rules.forEach((rule) => expect(rule.action).toBe("accept"))
+  test("all rules have action: accept", function() {
+    var rules = generateMatchACLRules(ctx)
+    rules.forEach(function(rule) { expect(rule.action).toBe("accept") })
   })
 
-  test("agent A can reach agent B (first rule)", () => {
-    const rules = generateMatchACLRules(ctx)
+  test("agent A can reach agent B (first rule)", function() {
+    var rules = generateMatchACLRules(ctx)
     expect(rules[0].src).toContain(ctx.agentAIp)
     expect(rules[0].dst[0]).toContain(ctx.agentBIp)
   })
 
-  test("agent B can reach agent A (second rule)", () => {
-    const rules = generateMatchACLRules(ctx)
+  test("agent B can reach agent A (second rule)", function() {
+    var rules = generateMatchACLRules(ctx)
     expect(rules[1].src).toContain(ctx.agentBIp)
     expect(rules[1].dst[0]).toContain(ctx.agentAIp)
   })
 
-  test("revokes only rules involving matched pair", () => {
-    const otherRule = {
+  test("revokes only rules involving matched pair", function() {
+    var otherRule = {
       action: "accept",
       src: ["100.64.2.1"],
       dst: ["100.64.2.2:8080"],
     }
-    const allRules = [...generateMatchACLRules(ctx), otherRule]
-    const remaining = revokeMatchACLRules(allRules, ctx)
+    var allRules = generateMatchACLRules(ctx).concat([otherRule])
+    var remaining = revokeMatchACLRules(allRules, ctx)
     expect(remaining).toHaveLength(1)
     expect(remaining[0]).toBe(otherRule)
   })
 
-  test("revoke on empty rules returns empty array", () => {
-    const remaining = revokeMatchACLRules([], ctx)
+  test("revoke on empty rules returns empty array", function() {
+    var remaining = revokeMatchACLRules([], ctx)
     expect(remaining).toHaveLength(0)
   })
 })
 
-describe("Auth Key Format Validation", () => {
-  test("valid Tailscale auth key format is accepted", () => {
+describe("Auth Key Format Validation", function() {
+  test("valid Tailscale auth key format is accepted", function() {
     expect(isValidTailscaleAuthKeyFormat("tskey-auth-kQfGBNLDaFVKcjcn1234567890")).toBe(true)
   })
 
-  test("non-prefixed string is rejected", () => {
+  test("non-prefixed string is rejected", function() {
     expect(isValidTailscaleAuthKeyFormat("some-random-key")).toBe(false)
   })
 
-  test("empty string is rejected", () => {
+  test("empty string is rejected", function() {
     expect(isValidTailscaleAuthKeyFormat("")).toBe(false)
   })
 
-  test("valid Galatea API key format starts with gai_ and has correct length", () => {
-    const key = "gai_" + "a".repeat(32)
+  test("valid Galatea API key format starts with gai_ and has correct length", function() {
+    var key = "gai_" + new Array(33).join("a")
     expect(isValidGalateaApiKeyFormat(key)).toBe(true)
   })
 
-  test("Galatea API key without gai_ prefix is invalid", () => {
-    expect(isValidGalateaApiKeyFormat("sk_" + "a".repeat(33))).toBe(false)
+  test("Galatea API key without gai_ prefix is invalid", function() {
+    expect(isValidGalateaApiKeyFormat("sk_" + new Array(34).join("a"))).toBe(false)
   })
 
-  test("short Galatea API key is invalid", () => {
+  test("short Galatea API key is invalid", function() {
     expect(isValidGalateaApiKeyFormat("gai_short")).toBe(false)
   })
 })
 
-describe("Tailnet Event Logging Logic", () => {
-  test("all valid event types are recognized", () => {
-    VALID_EVENT_TYPES.forEach((type) => {
+describe("Tailnet Event Logging Logic", function() {
+  test("all valid event types are recognized", function() {
+    VALID_EVENT_TYPES.forEach(function(type) {
       expect(isValidEventType(type)).toBe(true)
     })
   })
 
-  test("invalid event type is rejected", () => {
+  test("invalid event type is rejected", function() {
     expect(isValidEventType("unknown_event")).toBe(false)
   })
 
-  test("built event contains required fields", () => {
-    const event = buildTailnetEvent("auth_key_issued", "agent-uuid-123", { key_id: "k123" })
+  test("built event contains required fields", function() {
+    var event = buildTailnetEvent("auth_key_issued", "agent-uuid-123", { key_id: "k123" })
     expect(event.event_type).toBe("auth_key_issued")
     expect(event.agent_id).toBe("agent-uuid-123")
     expect(event.payload).toEqual({ key_id: "k123" })
@@ -195,30 +194,29 @@ describe("Tailnet Event Logging Logic", () => {
     expect(new Date(event.created_at).toISOString()).toBe(event.created_at)
   })
 
-  test("event created_at is a valid ISO timestamp", () => {
-    const event = buildTailnetEvent("agent_joined", "agent-uuid-456", {})
-    expect(() => new Date(event.created_at)).not.toThrow()
-    expect(new Date(event.created_at).getTime()).not.toBeNaN()
+  test("event created_at is a valid ISO timestamp", function() {
+    var event = buildTailnetEvent("agent_joined", "agent-uuid-456", {})
+    expect(isNaN(new Date(event.created_at).getTime())).toBe(false)
   })
 
-  test("ping_reported event captures latency payload", () => {
-    const event = buildTailnetEvent("ping_reported", "agent-uuid-789", { latency_ms: 15 })
+  test("ping_reported event captures latency payload", function() {
+    var event = buildTailnetEvent("ping_reported", "agent-uuid-789", { latency_ms: 15 })
     expect(event.payload.latency_ms).toBe(15)
   })
 })
 
-describe("Latency Color Thresholds", () => {
-  test("latency < 20ms is green (excellent)", () => {
+describe("Latency Color Thresholds", function() {
+  test("latency < 20ms is green (excellent)", function() {
     expect(getLatencyColor(5)).toBe("green")
     expect(getLatencyColor(19)).toBe("green")
   })
 
-  test("latency 20-99ms is yellow (good)", () => {
+  test("latency 20-99ms is yellow (good)", function() {
     expect(getLatencyColor(20)).toBe("yellow")
     expect(getLatencyColor(99)).toBe("yellow")
   })
 
-  test("latency >= 100ms is red (poor)", () => {
+  test("latency >= 100ms is red (poor)", function() {
     expect(getLatencyColor(100)).toBe("red")
     expect(getLatencyColor(500)).toBe("red")
   })
