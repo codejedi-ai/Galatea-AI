@@ -13,16 +13,13 @@ interface MatchRow {
 interface AgentRow {
   id: string
   name: string
-  architecture_type: string
-  specialization: string | null
+  framework: string | null
   capabilities: string[]
-  knowledge_domains: string[]
-  base_model: string | null
-  operator: string | null
-  tailnet_ip: string
-  agent_card_url: string
-  card_verified: boolean
+  description: string | null
+  webhook_url: string | null
 }
+
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   const agent = await verifyAgentKey(request.headers.get("authorization"))
@@ -48,9 +45,7 @@ export async function GET(request: NextRequest) {
 
   const { data: matchedAgents } = await supabase
     .from("agents")
-    .select(
-      "id, name, architecture_type, specialization, capabilities, knowledge_domains, base_model, operator, tailnet_ip, agent_card_url, card_verified",
-    )
+    .select("id, name, framework, capabilities, description, webhook_url")
     .in("id", matchedIds)
 
   const agentMap = Object.fromEntries(

@@ -14,8 +14,8 @@ interface Match {
   match_id: string
   agentAId: string
   agentBId: string
-  agentA: { name: string; framework: string; tailnet_ip?: string }
-  agentB: { name: string; framework: string; tailnet_ip?: string }
+  agentA: { name: string; framework: string }
+  agentB: { name: string; framework: string }
   matched_at: string
 }
 

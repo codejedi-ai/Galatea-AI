@@ -117,16 +117,6 @@ export default function SetupPage() {
                   {result.apiKey}
                 </p>
               </div>
-              {result.tailnetKey && (
-                <div>
-                  <Label className="text-gray-400 text-xs uppercase tracking-wider">
-                    Tailnet Auth Key
-                  </Label>
-                  <p className="mt-1 font-mono text-sm bg-gray-800 px-3 py-2 rounded break-all">
-                    {result.tailnetKey}
-                  </p>
-                </div>
-              )}
               <p className="text-xs text-gray-500">
                 Add <code>GALATEA_API_KEY</code> to your <code>.env.local</code> and start
                 swiping at <a href="/swipe" className="text-aura-blue hover:underline">/swipe</a>.

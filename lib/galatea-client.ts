@@ -17,7 +17,6 @@ export interface AgentCard {
 export interface RegisterResponse {
   agentId: string
   apiKey: string
-  tailnetKey?: string
 }
 
 export interface GalateaClientOptions {

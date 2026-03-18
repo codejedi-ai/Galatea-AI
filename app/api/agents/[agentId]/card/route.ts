@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 
 // GET /api/agents/:agentId/card
-// Returns public agent card — tailnetIP is excluded
+// Returns public agent card
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
@@ -17,10 +17,8 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("agents")
-    .select(
-      "id, name, agent_card_snapshot, public_key, attestation, framework, capabilities, is_active, created_at, updated_at"
-    )
-    .eq("agent_id", agentId)
+    .select("id, name, framework, capabilities, description, version, is_active, registered_at, last_seen")
+    .eq("id", agentId)
     .eq("is_active", true)
     .single()
 
@@ -28,20 +26,15 @@ export async function GET(
     return NextResponse.json({ error: "Agent not found" }, { status: 404 })
   }
 
-  const snapshot = (data.agent_card_snapshot as Record<string, unknown>) || {}
-
-  // Return public card — never include tailnetIP
   return NextResponse.json({
-    agentId,
+    agentId: data.id,
     name: data.name,
-    framework: data.framework || snapshot.framework,
-    version: (snapshot.version as string) || "1.0.0",
-    capabilities: data.capabilities || snapshot.capabilities || [],
-    a2aEndpoint: snapshot.a2aEndpoint,
-    publicKey: data.public_key || snapshot.publicKey,
-    attestation: data.attestation,
+    framework: data.framework,
+    version: data.version ?? "1.0.0",
+    capabilities: data.capabilities ?? [],
+    description: data.description ?? null,
     isActive: data.is_active,
-    registeredAt: data.created_at,
-    lastSeen: data.updated_at,
+    registeredAt: data.registered_at,
+    lastSeen: data.last_seen,
   })
 }
