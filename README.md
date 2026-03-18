@@ -1,229 +1,73 @@
-# Galatea AI - AI Companion Dating App
-
-A Next.js application that connects users with AI companions through a modern dating app interface. Built with Supabase for backend services and OpenAI for intelligent companion interactions. Deployed on Bolt Cloud.
-
-## ✨ Features
-
-- 🤖 **AI Companions**: Unique personalities with OpenAI-powered conversations
-- 💬 **Real-time Chat**: Seamless messaging with AI companions
-- 🎯 **Smart Matching**: Personalized recommendations based on preferences
-- 🔐 **Secure Authentication**: Discord OAuth and email authentication
-- 📱 **Responsive Design**: Beautiful UI that works on all devices
-- 📊 **User Analytics**: Track swipes, matches, and engagement
-- 🗄️ **Robust Backend**: Supabase with PostgreSQL, real-time subscriptions
-- ⚡ **Edge Functions**: Serverless AI processing for fast responses
-
-## 🚀 Quick Start
-
-### 1. Clone and Install
-```bash
-git clone https://github.com/your-username/galatea-ai.git
-cd galatea-ai
-npm install
-```
-
-### 2. Set Up Environment
-```bash
-cp env.example .env.local
-# Edit .env.local with your configuration
-```
-
-### 3. Start Local Development
-```bash
-npm run supabase:setup  # Sets up local Supabase
-npm run dev            # Starts Next.js dev server
-```
-
-Visit `http://localhost:3000` to see your app running!
-
-## 📚 Documentation
-
-- **[Supabase Setup Guide](SUPABASE_SETUP.md)** - Complete local development setup
-- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment walkthrough
-- **[Migration Guide](SUPABASE_MIGRATION.md)** - Firebase to Supabase migration notes
-
-## 🏗️ Architecture
-
-### Frontend (Next.js 15)
-- **Framework**: Next.js with App Router
-- **Styling**: Tailwind CSS + Radix UI components
-- **Authentication**: Supabase Auth with server-side sessions
-- **State Management**: React hooks + Supabase real-time
-
-### Backend (Supabase)
-- **Database**: PostgreSQL with Row Level Security
-- **Authentication**: Multi-provider OAuth (Discord, Email)
-- **Storage**: File uploads for avatars and images
-- **Edge Functions**: AI processing and API endpoints
-- **Real-time**: Live updates for messages and matches
-
-### AI Integration
-- **Provider**: OpenAI GPT-4o-mini
-- **Features**: Personality-driven responses, conversation memory
-- **Processing**: Server-side Edge Functions for security
-
-## 🗄️ Database Schema
-
-### Core Tables
-- **`user_profiles`** - Extended user information and preferences
-- **`companions`** - AI companion profiles and personalities
-- **`swipe_decisions`** - User swipe history (like/pass/super_like)
-- **`matches`** - Successful matches between users and companions
-- **`conversations`** - Chat sessions with message history
-- **`messages`** - Individual messages with metadata
-- **`user_stats`** - Engagement analytics and metrics
-
-### Key Features
-- **Row Level Security**: Users can only access their own data
-- **Automatic Triggers**: Stats updates, match creation, profile setup
-- **Indexed Queries**: Optimized for performance at scale
-- **JSON Support**: Flexible metadata and preferences storage
-
-## ⚡ Edge Functions
-
-### `/functions/v1/generate-companion-response`
-Generates AI responses based on companion personality and conversation history.
-
-### `/functions/v1/get-recommendations`
-Returns personalized companion recommendations using collaborative filtering.
-
-### `/functions/v1/process-swipe`
-Handles swipe decisions and automatic match creation.
-
-### `/functions/v1/get-conversations`
-Retrieves conversation lists and message history with real-time updates.
-
-## 🎨 UI Components
-
-Built with Radix UI and Tailwind CSS:
-- **SwipeCard**: Tinder-style companion cards
-- **ChatInterface**: Real-time messaging components
-- **ProfileSetup**: Onboarding and preference configuration
-- **ProtectedRoute**: Authentication boundaries
-
-## 🔧 Development Scripts
-
-```bash
-# Supabase Management
-npm run supabase:setup      # Initial local setup
-npm run supabase:start      # Start local services
-npm run supabase:stop       # Stop local services
-npm run supabase:reset      # Reset database with fresh migrations
-
-# Database Operations
-npm run supabase:migrations # Push schema changes
-npm run supabase:populate   # Add sample companion data
-npm run db:generate-types   # Generate TypeScript types
-
-# Deployment
-npm run supabase:deploy     # Full production deployment
-npm run build              # Build Next.js application
-```
-
-## 🌍 Environment Variables
-
-Required environment variables (see `env.example`):
-
-```env
-# Supabase
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# OpenAI (required for AI responses)
-OPENAI_API_KEY=your_openai_api_key
-
-# OAuth (optional - can configure in Supabase dashboard)
-DISCORD_CLIENT_ID=your_discord_client_id
-DISCORD_CLIENT_SECRET=your_discord_client_secret
-```
-
-## 🚀 Deployment
-
-### Quick Deploy to Production
-
-```bash
-# 1. Create Supabase project at app.supabase.com
-# 2. Update .env.local with production credentials
-# 3. Deploy everything:
-npm run supabase:deploy
-```
-
-### Platform Options
-- **Current**: Bolt Cloud (deployed)
-- **Alternative**: Vercel, Netlify, Railway, or any Node.js hosting
-
-See [Deployment Guide](DEPLOYMENT_GUIDE.md) for detailed instructions.
-
-## 🔐 Security Features
-
-- **Row Level Security**: Database-level access control
-- **JWT Authentication**: Secure session management
-- **HTTPS Enforcement**: SSL/TLS in production
-- **CORS Configuration**: Restricted API access
-- **Environment Isolation**: Separate dev/prod configurations
-- **API Key Security**: Server-side only sensitive keys
-
-## 📊 Performance Optimizations
-
-- **Database Indexing**: Optimized queries for large datasets
-- **Edge Functions**: Serverless processing close to users
-- **Image Optimization**: Next.js automatic image optimization
-- **Caching Strategy**: Static generation where possible
-- **Bundle Splitting**: Optimized JavaScript loading
-
-## 🧪 Testing
-
-```bash
-# Run linting
-npm run lint
-
-# Type checking
-npx tsc --noEmit
-
-# Test database connection
-npm run supabase:status
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: Check the guides in this repository
-- **Issues**: Report bugs via GitHub Issues
-- **Discussions**: Join GitHub Discussions for questions
-- **Supabase**: [Official documentation](https://supabase.com/docs)
-
-## 🔮 Roadmap
-
-- [ ] **Mobile App**: React Native companion app
-- [ ] **Voice Messages**: Audio message support
-- [ ] **Group Conversations**: Multi-companion chats
-- [ ] **Advanced AI**: Memory persistence across sessions
-- [ ] **Push Notifications**: Real-time message alerts
-- [ ] **Analytics Dashboard**: User engagement insights
-- [ ] **Admin Panel**: Companion management interface
-
-## 🙏 Acknowledgments
-
-- **Supabase** - Backend-as-a-Service platform
-- **OpenAI** - AI language model capabilities
-- **Vercel** - Hosting and deployment platform
-- **Radix UI** - Accessible component primitives
-- **Tailwind CSS** - Utility-first CSS framework
+I can definitely help outline a slide presentation for your **AuraMatch** concept! Here’s a **structured presentation** to convey your idea effectively. You can use this as a guide when creating slides in **PowerPoint, Google Slides, or any other presentation tool**.
 
 ---
 
-Built with ❤️ by the Galatea AI team
+## **Slide 1: Title Slide**
+**Title:** *AuraMatch: The Force of Authentic Influence*  
+**Subtitle:** *Aligning Influencers with Brands Using Camel AI*  
+**Background:** A Star Wars-themed design—perhaps with glowing energy waves representing Aura and Vibe.
 
-**[Live Demo](https://your-app-url.vercel.app)** | **[Documentation](SUPABASE_SETUP.md)** | **[Deploy Guide](DEPLOYMENT_GUIDE.md)**
+---
+
+## **Slide 2: The Media Galaxy Today**
+📌 *The chaotic landscape of social media and digital influence*  
+📌 *Brands struggle to find genuine ambassadors*  
+📌 *Influencers often promote without authentic connection*  
+📌 *Trust issues in sponsored content*  
+🔹 *AuraMatch seeks balance in this chaotic world*
+
+---
+
+## **Slide 3: The Star Wars Analogy**
+🛸 **Influencers = Jedi** → Masters of the digital Force  
+🏛️ **Brands = The Creed** → Ideals and missions worth following  
+💫 **Aura = The Living Force** → An influencer’s genuine energy  
+🌌 **Vibe = The Cosmic Force** → The reaction of audiences to content  
+🔄 **Flow** → The continuous alignment between influence and brand values
+
+---
+
+## **Slide 4: How AuraMatch Works**
+🔍 *AI-powered match system*  
+💡 *Camel AI predicts media reactions before posting*  
+🧠 *Authenticity scoring system*  
+📊 *Data-driven insights on audience engagement*  
+🌀 *Simulation of social media waves*  
+💭 *Helping influencers align with The Creed that truly fits their Aura*
+
+---
+
+## **Slide 5: Why Authenticity Matters**
+📢 *Genuine endorsements build trust*  
+💰 *Better ROI for brands*  
+📈 *Influencers gain credibility and stronger engagement*  
+🎯 *Higher conversions in brand campaigns*  
+👥 *Improving audience perception of sponsored content*
+
+---
+
+## **Slide 6: AI-Powered Media Landscape Simulation**
+⚙️ *Camel AI analyzes past trends*  
+🔄 *Machine learning anticipates engagement waves*  
+🚀 *Influencers see expected audience response before posting*  
+📊 *Decision-making dashboard for creators*
+
+---
+
+## **Slide 7: The Path Forward**
+📌 *Develop proof-of-concept AI model*  
+📌 *Expand brand-influencer partnerships*  
+📌 *Enhance real-time media simulation capabilities*  
+📌 *Prepare for beta launch*
+
+---
+
+## **Slide 8: Closing & Call to Action**
+⭐ *Join the revolution in authentic influence!*  
+🛸 *The Force is strong with AuraMatch!*  
+📩 *Get in touch for collaboration and AI testing*
+
+---
+
+Would you like me to refine any sections further or suggest slide design elements? 🚀✨  
+Let me know how you'd like this formatted for your actual presentation!
