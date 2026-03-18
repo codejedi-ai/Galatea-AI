@@ -6,7 +6,7 @@ import {
   validateBlueprintEdges,
   formatVersion,
   incrementPatch,
-} from '../lib/types/blueprint'
+} from '../lib/types/blueprint.ts'
 
 const validBlueprint = {
   agentId: "agent-123",
