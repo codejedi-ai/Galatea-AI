@@ -1,12 +1,15 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss"
+
+const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -50,26 +53,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        ivory: {
-          100: "#FFFFF0",
-          200: "#FEFCEB",
-        },
-        rose: {
-          50: "#FFF1F2",
-          100: "#FFE4E6",
-          500: "#F43F5E",
-          600: "#E11D48",
-          700: "#BE123C",
-        },
-        earth: {
-          100: "#E5D9C9",
-          200: "#D3C1A8",
-          300: "#C1A987",
-          400: "#AF9166",
-          500: "#9D7945",
-          600: "#7A5F36",
-          700: "#574527",
-          800: "#342B18",
+        aura: {
+          blue: "#3CDFFF",
+          purple: "#D896FF",
+          dark: "#0A0C1B",
+          darker: "#050714",
         },
       },
       borderRadius: {
@@ -79,22 +67,35 @@ module.exports = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
+        },
+        flow: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { opacity: "0.6" },
+          "50%": { opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        flow: "flow 15s ease infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "aura-gradient": "linear-gradient(90deg, #3CDFFF 0%, #A78BFA 50%, #D896FF 100%)",
       },
     },
   },
-  plugins: [
-    import('@tailwindcss/aspect-ratio'),
-  ],
-}
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config
 
+export default config

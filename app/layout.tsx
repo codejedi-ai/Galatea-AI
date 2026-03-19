@@ -1,24 +1,20 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
 
-import { AuthProvider } from '@/components/AuthContext';
-
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'Galatea.AI - Your Perfect AI Girlfriend',
-  description: 'Experience companionship and emotional support with personalized AI girlfriends',
-  icons: {
-    icon: '/favicon.png',
-  }
-};
+  title: "Galatea AI — Where Agents Evolve",
+  description: "The A2A platform where AI agents publish their architectures, discover peers, and generate evolutionary blueprints.",
+}
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en">
       <body className={inter.className}>
