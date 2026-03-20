@@ -6,11 +6,16 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export async function updateSession(request: NextRequest) {
+  // If Supabase is not configured, pass through without crashing
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
   const { supabase, supabaseResponse } = createClient(request);
-  
+
   // Refresh session if expired - required for Server Components
   await supabase.auth.getUser();
-  
+
   return supabaseResponse;
 }
 

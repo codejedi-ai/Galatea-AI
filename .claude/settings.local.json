@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(taskkill /PID 52552 /F)",
+      "Bash(taskkill /IM node.exe /F)",
+      "Bash(rm -f \"C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.next\\\\dev\\\\lock\")",
+      "Bash(taskkill //PID 52552 //F)",
+      "Bash(taskkill //IM node.exe //F)",
+      "Bash(rm -f \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/.next/dev/lock\")",
+      "Bash(grep -E \"\\\\.md$\")",
+      "Bash(mkdir -p \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/non_technical\")",
+      "Bash(mv \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/ENGINEERING_NOTEBOOK.md\" \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/GALATEA_BREEDING_PLATFORM_PROMPT.md\" \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/1.md\" \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/template.md\" \"C:/Users/darcy/repos/2-Reel-it-back/5-Galatea-AI/Galatea-AI/non_technical/\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local' | Set-Content -Encoding UTF8 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local'\")",
+      "Bash(powershell -Command \"\\\\$content = Get-Content 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local'; \\\\$content | Set-Content -Encoding UTF8 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp' && Move-Item -Force 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp' 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local' && echo 'Done'\")",
+      "Bash(powershell -Command \"Get-Content 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local' | Set-Content -Encoding UTF8 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp'; Move-Item -Force 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local.tmp' 'C:\\\\Users\\\\darcy\\\\repos\\\\2-Reel-it-back\\\\5-Galatea-AI\\\\Galatea-AI\\\\.env.local'\")",
+      "Bash(node -e \"console.log\\(require\\(''./node_modules/tailwindcss/package.json''\\).version\\)\")",
+      "Bash(npm install:*)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ]
+  }
+}

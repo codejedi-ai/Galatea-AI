@@ -7,6 +7,8 @@ import Image from "next/image"
 import { Info, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { AICompanion } from "@/lib/companions"
+import { AgentIdentityCard } from "@/components/agent-identity-card"
+import type { AgentIdentityCardProps } from "@/components/agent-identity-card"
 
 interface SwipeCardProps {
   companion: AICompanion
@@ -14,9 +16,11 @@ interface SwipeCardProps {
   onSwipeRight: () => void
   onSuperLike: () => void
   style?: React.CSSProperties
+  /** Optional agent identity data to show the identity card overlay */
+  agentIdentity?: AgentIdentityCardProps
 }
 
-export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, style }: SwipeCardProps) {
+export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, style, agentIdentity }: SwipeCardProps) {
   const [showDetails, setShowDetails] = useState(false)
 
   return (
@@ -170,6 +174,13 @@ export function SwipeCard({ companion, onSwipeLeft, onSwipeRight, onSuperLike, s
             >
               <Star className="w-4 h-4" />
             </button>
+          </div>
+        )}
+
+        {/* Agent identity card — shown when details are expanded */}
+        {showDetails && agentIdentity && (
+          <div className="absolute top-4 left-4 right-16">
+            <AgentIdentityCard {...agentIdentity} className="text-sm" />
           </div>
         )}
       </div>
