@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 230 35% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 35% 7%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 35% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-aura-darker text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+.glow {
+  box-shadow: 0 0 15px rgba(60, 223, 255, 0.5), 0 0 30px rgba(216, 150, 255, 0.3);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-aura-gradient animate-flow;
+  background-size: 200% auto;
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 0.5rem;
+  background: linear-gradient(var(--background), var(--background)) padding-box,
+    linear-gradient(90deg, #3cdfff, #d896ff) border-box;
+  border: 1px solid transparent;
+}
+
+.aura-card {
+  @apply bg-aura-dark rounded-xl p-6 relative overflow-hidden;
+}
+
+.aura-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3cdfff, #d896ff);
+}
+
+.aura-button {
+  @apply relative px-6 py-2 rounded-full overflow-hidden transition-all duration-300;
+}
+
+.aura-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #3cdfff, #d896ff);
+  opacity: 0.8;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.aura-button:hover::before {
+  opacity: 1;
+}
+
+.aura-input {
+  @apply bg-aura-dark border border-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all;
+}
+
+.hero-gradient {
+  background: radial-gradient(circle at 50% 50%, rgba(60, 223, 255, 0.15), rgba(216, 150, 255, 0.15), transparent 60%);
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.4;
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.blob-blue {
+  background: rgba(60, 223, 255, 0.4);
+  width: 300px;
+  height: 300px;
+  top: -100px;
+  left: -100px;
+}
+
+.blob-purple {
+  background: rgba(216, 150, 255, 0.4);
+  width: 400px;
+  height: 400px;
+  bottom: -150px;
+  right: -150px;
+}

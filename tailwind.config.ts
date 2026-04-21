@@ -1,12 +1,15 @@
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss"
+
+const config = {
   darkMode: ["class"],
   content: [
-    './pages/**/*.{ts,tsx}',
-    './components/**/*.{ts,tsx}',
-    './app/**/*.{ts,tsx}',
-    './src/**/*.{ts,tsx}',
-	],
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "*.{js,ts,jsx,tsx,mdx}",
+  ],
+  prefix: "",
   theme: {
     container: {
       center: true,
@@ -17,6 +20,40 @@ module.exports = {
     },
     extend: {
       colors: {
+        // Colors from the first configuration
+        teal: {
+          50: "#e6fcff",
+          100: "#c2f9ff",
+          200: "#8ff2ff",
+          300: "#4ee6ff",
+          400: "#1cd8ff",
+          500: "#00c4f0",
+          600: "#009bc2",
+          700: "#007a9e",
+          800: "#006380",
+          900: "#00526a",
+          950: "#003544",
+        },
+        gray: {
+          950: "#0a0c10",
+          900: "#111318",
+          800: "#1a1d24",
+          700: "#2a2f3a",
+        },
+        black: "#050507",
+
+        // Colors from the second configuration (Galatea specific)
+        galatea: {
+          dark: "#0A0E17",
+          darker: "#050A14",
+          cyan: "#00E5FF",
+          "cyan-light": "#4AEAFF",
+          "cyan-dark": "#00B8CC",
+          gray: "#2A3142",
+          "gray-light": "#3D4663",
+        },
+
+        // Standard HSL colors (present in both, combined once)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -50,27 +87,6 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        ivory: {
-          100: "#FFFFF0",
-          200: "#FEFCEB",
-        },
-        rose: {
-          50: "#FFF1F2",
-          100: "#FFE4E6",
-          500: "#F43F5E",
-          600: "#E11D48",
-          700: "#BE123C",
-        },
-        earth: {
-          100: "#E5D9C9",
-          200: "#D3C1A8",
-          300: "#C1A987",
-          400: "#AF9166",
-          500: "#9D7945",
-          600: "#7A5F36",
-          700: "#574527",
-          800: "#342B18",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -78,21 +94,39 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       keyframes: {
+        // Keyframes from both configurations
         "accordion-down": {
-          from: { height: 0 },
+          from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
           from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: 0 },
+          to: { height: "0" },
+        },
+        pulse: { // From second configuration
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        glow: { // From second configuration
+          "0%, 100%": { boxShadow: "0 0 10px rgba(0, 229, 255, 0.5)" },
+          "50%": { boxShadow: "0 0 20px rgba(0, 229, 255, 0.8), 0 0 30px rgba(0, 229, 255, 0.6)" },
         },
       },
       animation: {
+        // Animations from both configurations
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite", // From second configuration
+        glow: "glow 2s ease-in-out infinite", // From second configuration
+      },
+      backgroundImage: { // From second configuration
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "galatea-gradient": "linear-gradient(to right, #00E5FF, #4AEAFF)",
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-}
+} satisfies Config
 
+export default config

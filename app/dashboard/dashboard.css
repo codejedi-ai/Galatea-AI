@@ -1,0 +1,32 @@
+/* Dashboard-specific styles */
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.dashboard-header {
+  padding: 1rem;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.dashboard-content {
+  flex: 1;
+  padding: 2rem;
+}
+
+.dashboard-sidebar {
+  width: 250px;
+  background-color: var(--card);
+  border-right: 1px solid var(--border);
+}
+
+.dashboard-footer {
+  padding: 1rem;
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
+}

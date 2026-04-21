@@ -1,77 +1,262 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
+/* ─── THEMES ──────────────────────────────────────────────────────────────── */
+
 @layer base {
-  :root {
+  /* Default + Cyber Teal (theme-3) */
+  :root,
+  [data-theme="cyber-teal"] {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 5%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 183 100% 36%;
+    --primary-foreground: 222 47% 5%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 183 100% 36%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 183 100% 36%;
+
+    --radius: 0.5rem;
+  }
+
+  /* Rose Earth (theme-1 / theme-2) – warm light */
+  [data-theme="rose-earth"] {
     --background: 36 33% 97%;
     --foreground: 24 6% 15%;
 
     --card: 36 33% 97%;
     --card-foreground: 24 6% 15%;
- 
+
     --popover: 36 33% 97%;
     --popover-foreground: 24 6% 15%;
- 
+
     --primary: 0 59% 51%;
     --primary-foreground: 36 33% 97%;
- 
+
     --secondary: 33 23% 83%;
     --secondary-foreground: 24 6% 15%;
- 
+
     --muted: 33 23% 83%;
     --muted-foreground: 24 6% 40%;
- 
+
     --accent: 33 23% 83%;
     --accent-foreground: 24 6% 15%;
- 
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 36 33% 97%;
 
     --border: 33 23% 83%;
     --input: 33 23% 83%;
     --ring: 0 59% 51%;
- 
+
     --radius: 0.5rem;
   }
- 
-  .dark {
-    --background: 24 6% 15%;
-    --foreground: 36 33% 97%;
- 
-    --card: 24 6% 15%;
-    --card-foreground: 36 33% 97%;
- 
-    --popover: 24 6% 15%;
-    --popover-foreground: 36 33% 97%;
- 
-    --primary: 0 59% 51%;
-    --primary-foreground: 36 33% 97%;
- 
-    --secondary: 33 23% 17%;
-    --secondary-foreground: 36 33% 97%;
- 
-    --muted: 33 23% 17%;
-    --muted-foreground: 33 23% 63%;
- 
-    --accent: 33 23% 17%;
-    --accent-foreground: 36 33% 97%;
- 
+
+  /* A2A Black Cyan (theme-4) – neon cyberpunk */
+  [data-theme="black-cyan"] {
+    --background: 240 43% 7%;
+    --foreground: 0 0% 100%;
+
+    --card: 240 40% 10%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 240 43% 7%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 180 100% 50%;
+    --primary-foreground: 240 43% 7%;
+
+    --secondary: 240 30% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 30% 14%;
+    --muted-foreground: 0 0% 63%;
+
+    --accent: 300 100% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 30% 14%;
+    --input: 240 30% 14%;
+    --ring: 180 100% 50%;
+
+    --radius: 0.5rem;
+  }
+
+  /* Aura (theme-5) – deep blue / purple */
+  [data-theme="aura"] {
+    --background: 230 35% 7%;
+    --foreground: 210 40% 98%;
+
+    --card: 230 35% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 230 35% 7%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 280 60% 60%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 36 33% 97%;
- 
-    --border: 33 23% 17%;
-    --input: 33 23% 17%;
-    --ring: 0 59% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --radius: 0.5rem;
   }
 }
- 
+
+/* ─── BASE STYLES ─────────────────────────────────────────────────────────── */
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
+/* ─── SIDEBAR ─────────────────────────────────────────────────────────────── */
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-3 rounded-lg transition-colors;
+}
+
+.sidebar-item-active {
+  @apply bg-secondary text-primary;
+}
+
+.sidebar-item-inactive {
+  @apply text-muted-foreground hover:bg-secondary/50 hover:text-foreground;
+}
+
+/* ─── SWIPE BUTTONS ───────────────────────────────────────────────────────── */
+
+.swipe-buttons button {
+  @apply flex items-center justify-center rounded-full shadow-lg transition-transform duration-200 ease-out;
+}
+
+.swipe-buttons button:hover {
+  @apply transform scale-110;
+}
+
+.swipe-buttons button:active {
+  @apply transform scale-95;
+}
+
+/* ─── ANIMATIONS ──────────────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s infinite linear;
+}
+
+.animate-delay-500  { animation-delay: 500ms; }
+.animate-delay-1000 { animation-delay: 1000ms; }
+
+@keyframes bounce-dot {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40%           { transform: scale(1.0); opacity: 1; }
+}
+
+@keyframes pulse-scale {
+  0%, 100% { opacity: 0.6; transform: scale(0.85); }
+  50%       { opacity: 1;   transform: scale(1); }
+}
+
+/* ─── CARD / GLOW EFFECTS ─────────────────────────────────────────────────── */
+
+.card-glow {
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+}
+.card-glow:hover {
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
+}
+
+.text-glow {
+  text-shadow: 0 0 10px rgba(77, 216, 225, 0.7);
+}
+
+.glow {
+  box-shadow: 0 0 15px rgba(60, 223, 255, 0.5), 0 0 30px rgba(216, 150, 255, 0.3);
+}
+
+.glass-effect {
+  background: rgba(26, 31, 43, 0.25);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(77, 216, 225, 0.1);
+}
+
+/* ─── MISC UTILITIES ──────────────────────────────────────────────────────── */
+
+.rotate-y-180        { transform: rotateY(180deg); }
+.backface-hidden     { backface-visibility: hidden; }
+.transform-style-3d  { transform-style: preserve-3d; }
+.perspective-1000    { perspective: 1000px; }
+
+.text-gradient {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(to right, hsl(var(--primary)), hsl(var(--accent)));
+  background-size: 200% auto;
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 0.5rem;
+  background: linear-gradient(hsl(var(--background)), hsl(var(--background))) padding-box,
+    linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+  border: 1px solid transparent;
+}
+
+/* Black-cyan theme neon utilities */
+[data-theme="black-cyan"] .neon-glow {
+  text-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 30px #00FFFF;
+}
+
+[data-theme="black-cyan"] .card-glow {
+  box-shadow: 0 0 10px rgba(0,255,255,0.4), 0 0 20px rgba(0,255,255,0.2);
+}
+
+[data-theme="black-cyan"] .card-glow:hover {
+  box-shadow: 0 0 20px rgba(0,255,255,0.6), 0 0 40px rgba(0,255,255,0.3);
+}

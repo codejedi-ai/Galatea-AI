@@ -1,0 +1,19 @@
+.swipe-card {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.swipe-card-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+}
+
+.swipe-card {
+  @apply absolute w-full h-full rounded-2xl overflow-hidden transition-all duration-300 ease-out;
+}

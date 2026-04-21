@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galatea AI — Theme Evolution</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a14;
+    color: #fff;
+    padding: 48px 24px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #00c4f0, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    margin-bottom: 56px;
+    font-size: 0.95rem;
+  }
+
+  .timeline {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #00c4f022, #00c4f066, #a78bfa66, #00c4f022);
+    transform: translateX(-50%);
+  }
+
+  .theme-entry {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 64px;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .theme-entry:nth-child(odd) { flex-direction: row; }
+  .theme-entry:nth-child(even) { flex-direction: row-reverse; }
+
+  .theme-entry::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 28px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .theme-entry.t1::before { background: #c0392b; box-shadow: 0 0 12px #c0392b88; }
+  .theme-entry.t2::before { background: #e74c3c; box-shadow: 0 0 12px #e74c3c88; }
+  .theme-entry.t3::before { background: #00c4f0; box-shadow: 0 0 12px #00c4f088; }
+  .theme-entry.t4::before { background: #00ffff; box-shadow: 0 0 12px #00ffff88; }
+  .theme-entry.t5::before { background: #818cf8; box-shadow: 0 0 12px #818cf888; }
+
+  .theme-meta {
+    flex: 1;
+    padding-top: 6px;
+  }
+
+  .theme-entry:nth-child(odd) .theme-meta { text-align: right; }
+  .theme-entry:nth-child(even) .theme-meta { text-align: left; }
+
+  .theme-date {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .theme-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .theme-desc {
+    font-size: 0.88rem;
+    color: #aaa;
+    line-height: 1.6;
+    max-width: 320px;
+  }
+
+  .theme-entry:nth-child(odd) .theme-desc { margin-left: auto; }
+
+  .theme-card {
+    flex: 1;
+    border-radius: 16px;
+    padding: 28px;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .card-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.5;
+    margin-bottom: 2px;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .card-body {
+    font-size: 0.82rem;
+    opacity: 0.7;
+    line-height: 1.5;
+  }
+
+  .color-row {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    flex-wrap: wrap;
+  }
+
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    opacity: 0.8;
+  }
+
+  .swatch-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Theme 1: Original Warm Red ── */
+  .t1 .theme-card {
+    background: hsl(36 33% 97%);
+    color: hsl(24 6% 15%);
+  }
+  .t1 .card-body { color: hsl(24 6% 35%); }
+  .t1 .card-label { color: hsl(24 6% 45%); opacity: 1; }
+  .t1 .pill { background: hsl(0 59% 51%); color: #fff; }
+  .t1 .theme-name { color: hsl(0 59% 51%); }
+
+  /* ── Theme 2: Rose & Earth ── */
+  .t2 .theme-card {
+    background: hsl(36 33% 94%);
+    color: hsl(24 6% 15%);
+  }
+  .t2 .card-body { color: hsl(24 6% 35%); }
+  .t2 .card-label { color: hsl(24 6% 45%); opacity: 1; }
+  .t2 .pill { background: #e74c3c; color: #fff; }
+  .t2 .theme-name { color: #c0392b; }
+
+  /* ── Theme 3: Cyber Teal (2025) ── */
+  .t3 .theme-card {
+    background: hsl(222 47% 5%);
+    color: hsl(210 40% 98%);
+    border-color: rgba(0, 196, 240, 0.2);
+    box-shadow: 0 0 30px rgba(0, 196, 240, 0.1);
+  }
+  .t3 .card-body { color: #e0e0e0; opacity: 1; }
+  .t3 .card-label { color: rgba(0,196,240,0.6); opacity: 1; }
+  .t3 .pill { background: #00c4f0; color: #050507; }
+  .t3 .theme-name { color: #00c4f0; }
+  .t3 .theme-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #00c4f0, transparent);
+  }
+  .t3 .theme-card::after {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 200px; height: 200px;
+    background: rgba(0, 196, 240, 0.06);
+    border-radius: 50%;
+    filter: blur(40px);
+  }
+
+  /* ── Theme 4: A2A Flat Black Cyan ── */
+  .t4 .theme-card {
+    background: #0a0a1a;
+    color: #fff;
+    border-color: rgba(0,255,255,0.15);
+    box-shadow: 0 0 20px rgba(0,255,255,0.05);
+  }
+  .t4 .card-body { color: rgba(255,255,255,0.7); opacity: 1; }
+  .t4 .card-label { color: rgba(0,255,255,0.5); opacity: 1; }
+  .t4 .pill { background: #00ffff; color: #000; }
+  .t4 .theme-name { color: #00ffff; }
+
+  /* ── Theme 5: Aura (Current) ── */
+  .t5 .theme-card {
+    background: hsl(230 35% 7%);
+    color: hsl(210 40% 98%);
+    border-color: rgba(60, 223, 255, 0.2);
+    box-shadow: 0 0 30px rgba(216,150,255,0.1);
+  }
+  .t5 .card-body { color: rgba(255,255,255,0.7); opacity: 1; }
+  .t5 .card-label { color: rgba(60,223,255,0.6); opacity: 1; }
+  .t5 .pill {
+    background: linear-gradient(90deg, #3cdfff, #d896ff);
+    color: hsl(222.2 47.4% 11.2%);
+  }
+  .t5 .theme-name {
+    background: linear-gradient(90deg, #3cdfff, #d896ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .t5 .theme-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3cdfff, #d896ff);
+  }
+  .t5 .theme-card::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -80px;
+    width: 200px; height: 200px;
+    background: rgba(216,150,255,0.08);
+    border-radius: 50%;
+    filter: blur(50px);
+  }
+
+  .commit-ref {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: 10px;
+  }
+
+  @media (max-width: 720px) {
+    .timeline::before { left: 20px; }
+    .theme-entry, .theme-entry:nth-child(even) { flex-direction: column; }
+    .theme-entry::before { left: 20px; }
+    .theme-entry .theme-meta { text-align: left; }
+    .theme-entry .theme-desc { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Galatea AI — Theme Evolution</h1>
+<p class="subtitle">Five distinct visual identities across the platform's history</p>
+
+<div class="timeline">
+
+  <!-- Theme 1 -->
+  <div class="theme-entry t1">
+    <div class="theme-meta">
+      <div class="theme-date">December 2024</div>
+      <div class="theme-name">Theme 1 — Original Warm Red</div>
+      <div class="theme-desc">
+        The original Galatea companion platform. Warm cream background with red/rose primary —
+        a dating app aesthetic built in a hackathon. Light mode only.
+      </div>
+      <div class="commit-ref">git: 391538a · "Complete Project"</div>
+    </div>
+    <div class="theme-card">
+      <div class="card-label">Galatea AI · v0.1</div>
+      <div class="card-title">Find your AI companion</div>
+      <div class="card-body">
+        A dating-style platform for discovering AI companions. Warm, approachable design
+        with a light background and rose-red primary color.
+      </div>
+      <div class="color-row">
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(36 33% 97%);border:1px solid #ccc"></div> Ivory bg</div>
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(0 59% 51%)"></div> Rose red primary</div>
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(24 6% 15%)"></div> Dark earth text</div>
+      </div>
+      <div style="margin-top:12px"><span class="pill">Sign in</span></div>
+    </div>
+  </div>
+
+  <!-- Theme 2 -->
+  <div class="theme-entry t2">
+    <div class="theme-meta">
+      <div class="theme-date">March 2025</div>
+      <div class="theme-name">Theme 2 — Rose & Earth</div>
+      <div class="theme-desc">
+        Same warm palette, now expanded with new component classes: nav links,
+        primary buttons in rose-red, and mobile safe-area support.
+        The "Boyfriends Wanted" era — still a companion dating product.
+      </div>
+      <div class="commit-ref">git: a0fd52c · "make commit Boyfriends Wanted"</div>
+    </div>
+    <div class="theme-card">
+      <div class="card-label">Galatea AI · v0.2</div>
+      <div class="card-title">Boyfriends Wanted</div>
+      <div class="card-body">
+        Companion platform with expanded styling — rose buttons, earth-tone nav links,
+        mobile-first layout with safe area insets.
+      </div>
+      <div class="color-row">
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(36 33% 94%);border:1px solid #ccc"></div> Warm cream</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#e74c3c"></div> Rose-red</div>
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(24 6% 40%)"></div> Earth muted</div>
+      </div>
+      <div style="margin-top:12px">
+        <span class="pill">Sign In</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme 3 -->
+  <div class="theme-entry t3">
+    <div class="theme-meta">
+      <div class="theme-date">May 2025</div>
+      <div class="theme-name">Theme 3 — Cyber Teal ✦ (your favourite)</div>
+      <div class="theme-desc">
+        First dark theme. A full visual rebrand to deep navy-black with teal/cyan accents.
+        Introduced glass morphism cards, particle animations, cyber-styled inputs,
+        and custom Galatea tokens. The most polished single theme in the codebase.
+      </div>
+      <div class="commit-ref">git: 5acc12b · "new theme"</div>
+    </div>
+    <div class="theme-card">
+      <div class="card-label">Galatea AI · v1.0</div>
+      <div class="card-title">Agent matchmaking platform</div>
+      <div class="card-body">
+        Deep navy-black with teal glow. Glass effect cards, shimmer animations,
+        particle dot grid background. Custom tokens: <code style="color:#00c4f0">--galatea-teal: #00c4f0</code>.
+      </div>
+      <div class="color-row">
+        <div class="swatch"><div class="swatch-dot" style="background:#050507;border:1px solid #333"></div> #050507 black</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#00c4f0"></div> #00c4f0 teal</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#0a0f14;border:1px solid #333"></div> #0a0f14 dark</div>
+      </div>
+      <div style="margin-top:12px"><span class="pill">Get Started</span></div>
+    </div>
+  </div>
+
+  <!-- Theme 4 -->
+  <div class="theme-entry t4">
+    <div class="theme-meta">
+      <div class="theme-date">March 2026 — A2A Pivot</div>
+      <div class="theme-name">Theme 4 — A2A Flat Cyan</div>
+      <div class="theme-desc">
+        The full A2A (Agent-to-Agent) pivot. Flat pure-black with electric cyan.
+        Simpler than the cyber theme — optimised for the agent feed, swipe UI,
+        and match cards. Lives in the feature branches today.
+      </div>
+      <div class="commit-ref">git: b9eb15f · "feat: pivot to A2A agent matchmaking platform"</div>
+    </div>
+    <div class="theme-card">
+      <div class="card-label">Galatea AI · v2.0 A2A</div>
+      <div class="card-title">Connect your agent</div>
+      <div class="card-body">
+        Pure black base (#0a0a1a) with flat electric cyan (#00FFFF) — no gradients,
+        no glass. Clean, fast-loading, component-first. Used by: agent-identity,
+        blueprint-studio, capability-matching, trust-scoring, tailnet-bridge.
+      </div>
+      <div class="color-row">
+        <div class="swatch"><div class="swatch-dot" style="background:#0a0a1a;border:1px solid #333"></div> #0a0a1a black</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#00ffff"></div> #00FFFF cyan</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#fff"></div> #fff white</div>
+      </div>
+      <div style="margin-top:12px"><span class="pill">Connect Agent</span></div>
+    </div>
+  </div>
+
+  <!-- Theme 5 -->
+  <div class="theme-entry t5">
+    <div class="theme-meta">
+      <div class="theme-date">March 2026 — Current</div>
+      <div class="theme-name">Theme 5 — Aura</div>
+      <div class="theme-desc">
+        The current main branch theme. Dark navy with a blue-to-purple gradient ("aura").
+        Blob animations, gradient borders, and a softer cyber feel.
+        Blends the teal era with purple to create a more ethereal, premium look.
+      </div>
+      <div class="commit-ref">git: HEAD (e92a205) · "merge: sync with Galatea-AI main"</div>
+    </div>
+    <div class="theme-card">
+      <div class="card-label">Galatea AI · v2.1 Aura</div>
+      <div class="card-title">Agent matchmaking platform</div>
+      <div class="card-body">
+        Dark navy with cyan-to-purple gradient. Blob animations, aura-card components,
+        gradient borders. Tokens: <code style="color:#3cdfff">#3cdfff</code> → <code style="color:#d896ff">#d896ff</code>.
+      </div>
+      <div class="color-row">
+        <div class="swatch"><div class="swatch-dot" style="background:hsl(230 35% 7%);border:1px solid #333"></div> Navy bg</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#3cdfff"></div> #3cdfff cyan</div>
+        <div class="swatch"><div class="swatch-dot" style="background:#d896ff"></div> #d896ff purple</div>
+      </div>
+      <div style="margin-top:12px"><span class="pill">Discover Agents</span></div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center;color:#444;font-size:0.8rem;margin-top:48px">
+  CSS source files: <code>themes/theme-1-original-dec2024.css</code> through <code>themes/theme-5-aura-current-2026.css</code>
+</p>
+
+</body>
+</html>
